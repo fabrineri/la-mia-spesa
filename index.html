@@ -99,34 +99,38 @@
             box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
         }
 
-        #itemInput { flex: 2; min-width: 120px; padding-right: 44px; }
+        #itemInput { flex: 2; min-width: 120px; }
         #categoryInput { flex: 1.3; min-width: 110px; background-color: #161C26; }
         #qtyInput { width: 75px; text-align: center; }
         #priceInput { width: 95px; }
 
-        /* PULSANTE MICROFONO INTEGRATO */
+        /* PULSANTE MICROFONO ESTERNO E INDIPENDENTE */
         .voice-btn {
-            position: absolute;
-            right: 175px; /* Allineato dinamicamente dentro il campo testo */
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            width: 52px;
             font-size: 18px;
             cursor: pointer;
-            z-index: 10;
-            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
             -webkit-tap-highlight-color: transparent;
         }
+        .voice-btn:active { transform: scale(0.95); }
+        
         .voice-btn.listening {
-            animation: pulse-red 1.2s infinite;
-            text-shadow: 0 0 10px var(--neon-red);
+            border-color: var(--neon-red);
+            background: rgba(255, 49, 49, 0.15);
+            box-shadow: 0 0 15px rgba(255, 49, 49, 0.4);
+            animation: pulse-border 1.5s infinite;
         }
 
-        @keyframes pulse-red {
-            0% { transform: translateY(-50%) scale(1); opacity: 1; }
-            50% { transform: translateY(-50%) scale(1.2); opacity: 0.5; }
-            100% { transform: translateY(-50%) scale(1); opacity: 1; }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(255, 49, 49, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 49, 49, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 49, 49, 0); }
         }
 
         button.add-btn {
@@ -215,7 +219,6 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.2s;
         }
-        /* REPARTI ATTIVI EVIDENZIATI NEL GESTORE */
         .cat-chip.has-items {
             border-color: rgba(0, 229, 255, 0.3);
             background: rgba(0, 229, 255, 0.03);
@@ -335,7 +338,6 @@
     <div class="container">
         <h1>SuperSpesa Pro Cloud 🛒</h1>
         
-        <!-- SELEZIONE SUPERMERCATO -->
         <div class="glass-panel">
             <div class="section-title">Supermercato Corrente</div>
             <div class="input-group" style="margin-bottom: 0;">
@@ -350,7 +352,6 @@
             </div>
         </div>
         
-        <!-- GESTIONE CORSIE (CON FILTRO CONTEGGIO PRODOTTI ATTIVI) -->
         <div class="glass-panel" style="padding: 16px 20px;">
             <div class="category-manager-title" onclick="toggleCatManager()">
                 <span style="color: #9D4EDD; font-weight: 700;">⚙️ Configura Ordine Corsie</span>
@@ -365,7 +366,6 @@
             </div>
         </div>
 
-        <!-- INPUT CON INTEGRATO SISTEMA DI DETTATURA VOCALE -->
         <div class="glass-panel">
             <div class="section-title">Aggiungi Prodotto</div>
             <div class="input-group">
@@ -381,7 +381,6 @@
             </div>
         </div>
 
-        <!-- PIÙ COMPRATI -->
         <div class="frequent-products-zone" id="frequentZone" style="display: none; margin: 0 6px 16px 6px;">
             <div class="section-title" style="color: #9D4EDD;">⭐ Comprati Spesso:</div>
             <div class="frequent-chips-container" id="frequentChips"></div>
@@ -389,7 +388,6 @@
 
         <div id="shoppingListContainer"></div>
 
-        <!-- DASHBOARD BUDGET -->
         <div class="budget-dashboard" id="budgetDashboard">
             <div class="budget-row">
                 <span>Totale stimato lista:</span>
@@ -452,24 +450,23 @@
             }
         };
 
-        // INTEGRAZIONE PUNTO 2: FUNZIONE WAKE LOCK (SCHERMO SEMPRE ACCESO)
+        // SCHERMO SEMPRE ACCESO
         let wakeLock = null;
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log("Wake Lock attivato: lo schermo non si spegnerà.");
                 }
-            } catch (err) { console.log("Wake Lock non concesso o non supportato"); }
+            } catch (err) { console.log("Wake Lock negato"); }
         }
         document.addEventListener('touchstart', requestWakeLock, { once: true });
         document.addEventListener('click', requestWakeLock, { once: true });
 
-        // INTEGRAZIONE PUNTO 4: DETTATURA VOCALE
+        // DETTATURA VOCALE
         function startVoiceRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                alert("La dettatura vocale non è supportata su questo browser. Usa Chrome o Safari mobile.");
+                alert("Dettatura vocale non supportata in questo browser.");
                 return;
             }
             
@@ -486,7 +483,6 @@
 
             recognition.onresult = (event) => {
                 const speechToText = event.results[0][0].transcript;
-                // Capitalizza la prima lettera
                 const formattedText = speechToText.charAt(0).toUpperCase() + speechToText.slice(1);
                 document.getElementById('itemInput').value = formattedText;
                 searchAutocomplete(); 
@@ -497,7 +493,7 @@
             recognition.onerror = () => { voiceBtn.classList.remove('listening'); };
         }
 
-        // INTEGRAZIONE PUNTO 1: TRIGGER VIBRAZIONE FEEDBACK TATTILE
+        // VIBRAZIONE APTICA
         function triggerHapticFeedback() {
             if (navigator.vibrate) {
                 navigator.vibrate(15); 
@@ -716,7 +712,6 @@
             sign.innerText = content.classList.contains('open') ? "▼" : "▶";
         }
 
-        // INTEGRAZIONE PUNTO 3: GESTORE CORSIE INTELLIGENTE CON CONTEGGIO
         function updateCategoryUI() {
             const select = document.getElementById('categoryInput');
             const catListElement = document.getElementById('customCatList');
@@ -737,7 +732,6 @@
             currentCatList.forEach((cat, index) => {
                 const li = document.createElement('li');
                 
-                // Conta quanti prodotti attivi ci sono in questa corsia
                 const countInCat = currentItems.filter(item => item.category === cat).length;
                 li.className = countInCat > 0 ? 'cat-chip has-items' : 'cat-chip';
                 
@@ -861,7 +855,7 @@
             const price = parseFloat(priceInput.value) || 0;
             
             if (text !== '' && categorySelect.value) {
-                triggerHapticFeedback(); // PUNTO 1
+                triggerHapticFeedback();
                 const activeMarket = getActiveMarket();
                 
                 if (!activeMarket.history) activeMarket.history = {};
@@ -892,7 +886,7 @@
         }
 
         function toggleItem(id) {
-            triggerHapticFeedback(); // PUNTO 1
+            triggerHapticFeedback();
             const activeItems = getActiveMarket().items;
             const index = activeItems.findIndex(item => item.id === id);
             if (index !== -1) {
@@ -926,7 +920,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service Worker registrato!', reg))
+                    .then(reg => console.log('Service Worker registrato!'))
                     .catch(err => console.error('Errore SW', err));
             });
         }
