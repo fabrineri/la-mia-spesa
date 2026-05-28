@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Spesa Cloud 🛒</title>
+    <title>SuperSpesa Smart Cloud 🛒</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#007AFF">
     
@@ -65,7 +65,7 @@
             gap: 8px;
             margin-bottom: 12px;
             flex-wrap: wrap;
-            position: relative; /* Serve per posizionare il menu autocompletamento */
+            position: relative;
         }
 
         input[type="text"], input[type="number"], select {
@@ -85,7 +85,7 @@
         #itemInput { flex: 2; min-width: 160px; }
         #categoryInput { flex: 1.5; min-width: 120px; }
         #qtyInput { width: 70px; }
-        #priceInput { width: 90px; }
+        #priceInput { width: 90px; background-color: #F2F2F7; } /* Grigio chiaro per indicare stima automatica */
 
         button.add-btn {
             background-color: var(--primary);
@@ -100,7 +100,6 @@
 
         button.add-btn:active { opacity: 0.7; }
 
-        /* Stile menu a tendina Autocompletamento */
         .autocomplete-suggestions {
             position: absolute;
             top: 100%;
@@ -130,7 +129,6 @@
         .suggestion-item:hover { background-color: #F2F2F7; }
         .suggestion-cat { font-size: 12px; color: var(--gray); align-self: center; }
 
-        /* Sezione Prodotti Frequenti */
         .frequent-products-zone {
             margin-bottom: 20px;
         }
@@ -158,7 +156,6 @@
         }
         .frequent-chip:active { background-color: #CCE3FF; }
 
-        /* Gestione Categorie */
         .category-manager {
             background-color: #F2F2F7;
             border-radius: 12px;
@@ -423,23 +420,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // ==========================================
-        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE CLOUD
-        // ==========================================
-        
-        // Your web app's Firebase configuration
         const firebaseConfig = {
-			apiKey: "AIzaSyDNbOMzuz-KvWp7krS-cWgSKpIq5cz1nZc",
-			authDomain: "superspesa-2d469.firebaseapp.com",
-			projectId: "superspesa-2d469",
-			storageBucket: "superspesa-2d469.firebasestorage.app",
-			messagingSenderId: "513253865523",
-			appId: "1:513253865523:web:f4f8c8caaef2c5c1dd4b46"
-		};
+            apiKey: "AIzaSyDNbOMzuz-KvWp7krS-cWgSKpIq5cz1nZc",
+            authDomain: "superspesa-2d469.firebaseapp.com",
+            projectId: "superspesa-2d469",
+            storageBucket: "superspesa-2d469.firebasestorage.app",
+            messagingSenderId: "513253865523",
+            appId: "1:513253865523:web:f4f8c8caaef2c5c1dd4b46"
+        };
 
         firebase.initializeApp(firebaseConfig);
         const firestoreDB = firebase.firestore();
-		const docRef = firestoreDB.collection("appData").doc("shoppingState");
+        const docRef = firestoreDB.collection("appData").doc("shoppingState");
 
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
@@ -447,16 +439,16 @@
             "Igiene e Casa 🧻", "Surgelati 🧊", "Flaminia 🎀"
         ];
 
-        // Dizionario intelligente per l'autocompletamento iniziale
+        // Dizionario intelligente con stime di prezzo standard iniziali (Prezzo Medio)
         const smartDictionary = [
-            { name: "Mele", cat: "Ortofrutta 🍎" }, { name: "Banane", cat: "Ortofrutta 🍎" }, { name: "Insalata", cat: "Ortofrutta 🍎" }, { name: "Pomodori", cat: "Ortofrutta 🍎" },
-            { name: "Pane", cat: "Pane e Forno 🥖" }, { name: "Biscotti", cat: "Pane e Forno 🥖" }, { name: "Crackers", cat: "Pane e Forno 🥖" }, { name: "Cornetti", cat: "Pane e Forno 🥖" },
-            { name: "Pasta", cat: "Dispensa 🍝" }, { name: "Riso", cat: "Dispensa 🍝" }, { name: "Passata di pomodoro", cat: "Dispensa 🍝" }, { name: "Olio d'oliva", cat: "Dispensa 🍝" }, { name: "Zucchero", cat: "Dispensa 🍝" }, { name: "Caffè", cat: "Dispensa 🍝" },
-            { name: "Petto di Pollo", cat: "Carne e Pesce 🥩" }, { name: "Macinato", cat: "Carne e Pesce 🥩" }, { name: "Salmone", cat: "Carne e Pesce 🥩" }, { name: "Prosciutto", cat: "Carne e Pesce 🥩" },
-            { name: "Latte", cat: "Latticini e Frigo 🧀" }, { name: "Mozzarella", cat: "Latticini e Frigo 🧀" }, { name: "Yogurt", cat: "Latticini e Frigo 🧀" }, { name: "Burro", cat: "Latticini e Frigo 🧀" }, { name: "Uova", cat: "Latticini e Frigo 🧀" },
-            { name: "Acqua Naturale", cat: "Bevande 💧" }, { name: "Acqua Frizzante", cat: "Bevande 💧" }, { name: "Birra", cat: "Bevande 💧" }, { name: "Vino", cat: "Bevande 💧" }, { name: "Succo di frutta", cat: "Bevande 💧" },
-            { name: "Carta Igienica", cat: "Igiene e Casa 🧻" }, { name: "Scottex", cat: "Igiene e Casa 🧻" }, { name: "Sapone Piatti", cat: "Igiene e Casa 🧻" }, { name: "Dentifricio", cat: "Igiene e Casa 🧻" }, { name: "Sacco Spazzatura", cat: "Igiene e Casa 🧻" },
-            { name: "Gelato", cat: "Surgelati 🧊" }, { name: "Piselli surgelati", cat: "Surgelati 🧊" }, { name: "Pizza surgelata", cat: "Surgelati 🧊" }, { name: "Bastoncini di pesce", cat: "Surgelati 🧊" }
+            { name: "Mele", cat: "Ortofrutta 🍎", price: 1.99 }, { name: "Banane", cat: "Ortofrutta 🍎", price: 1.49 }, { name: "Insalata", cat: "Ortofrutta 🍎", price: 1.19 }, { name: "Pomodori", cat: "Ortofrutta 🍎", price: 2.49 },
+            { name: "Pane", cat: "Pane e Forno 🥖", price: 1.20 }, { name: "Biscotti", cat: "Pane e Forno 🥖", price: 2.80 }, { name: "Crackers", cat: "Pane e Forno 🥖", price: 1.40 }, { name: "Cornetti", cat: "Pane e Forno 🥖", price: 2.50 },
+            { name: "Pasta", cat: "Dispensa 🍝", price: 0.85 }, { name: "Riso", cat: "Dispensa 🍝", price: 1.99 }, { name: "Passata di pomodoro", cat: "Dispensa 🍝", price: 0.99 }, { name: "Olio d'oliva", cat: "Dispensa 🍝", price: 7.49 }, { name: "Zucchero", cat: "Dispensa 🍝", price: 1.25 }, { name: "Caffè", cat: "Dispensa 🍝", price: 3.20 },
+            { name: "Petto di Pollo", cat: "Carne e Pesce 🥩", price: 6.50 }, { name: "Macinato", cat: "Carne e Pesce 🥩", price: 5.90 }, { name: "Salmone", cat: "Carne e Pesce 🥩", price: 8.90 }, { name: "Prosciutto", cat: "Carne e Pesce 🥩", price: 2.99 },
+            { name: "Latte", cat: "Latticini e Frigo 🧀", price: 1.39 }, { name: "Mozzarella", cat: "Latticini e Frigo 🧀", price: 1.10 }, { name: "Yogurt", cat: "Latticini e Frigo 🧀", price: 0.99 }, { name: "Burro", cat: "Latticini e Frigo 🧀", price: 2.20 }, { name: "Uova", cat: "Latticini e Frigo 🧀", price: 1.89 },
+            { name: "Acqua Naturale", cat: "Bevande 💧", price: 0.35 }, { name: "Acqua Frizzante", cat: "Bevande 💧", price: 0.35 }, { name: "Birra", cat: "Bevande 💧", price: 1.50 }, { name: "Vino", cat: "Bevande 💧", price: 4.50 }, { name: "Succo di frutta", cat: "Bevande 💧", price: 1.69 },
+            { name: "Carta Igienica", cat: "Igiene e Casa 🧻", price: 3.50 }, { name: "Scottex", cat: "Igiene e Casa 🧻", price: 2.40 }, { name: "Sapone Piatti", cat: "Igiene e Casa 🧻", price: 1.80 }, { name: "Dentifricio", cat: "Igiene e Casa 🧻", price: 2.10 }, { name: "Sacco Spazzatura", cat: "Igiene e Casa 🧻", price: 1.50 },
+            { name: "Gelato", cat: "Surgelati 🧊", price: 3.99 }, { name: "Piselli surgelati", cat: "Surgelati 🧊", price: 1.79 }, { name: "Pizza surgelata", cat: "Surgelati 🧊", price: 2.99 }, { name: "Bastoncini di pesce", cat: "Surgelati 🧊", price: 3.49 }
         ];
 
         let localState = {
@@ -467,7 +459,6 @@
         };
 
         function getActiveMarket() { 
-            // Fix protettivo se il cloud non ha ancora il campo history
             if(!localState.markets[localState.currentMarket].history) {
                 localState.markets[localState.currentMarket].history = {};
             }
@@ -488,9 +479,24 @@
             renderFrequentChips();
         });
 
-        // ==========================================
-        // 2. FUNZIONI AUTOCOMPLETAMENTO E FREQUENTI
-        // ==========================================
+        // Trova i prezzi stimati cercando in tutta la cronologia cross-market dell'utente
+        function findEstimatedPriceGlobal(productName) {
+            let latestPriceFound = 0;
+            
+            // 1. Cerca nella cronologia di TUTTI i supermercati per vedere se lo hai mai comprato prima
+            Object.keys(localState.markets).forEach(mName => {
+                const mHistory = localState.markets[mName].history || {};
+                if (mHistory[productName] && mHistory[productName].price > 0) {
+                    latestPriceFound = mHistory[productName].price;
+                }
+            });
+
+            if (latestPriceFound > 0) return latestPriceFound;
+
+            // 2. Se non lo hai mai comprato, cerca nel dizionario smart preimpostato
+            const defaultMatch = smartDictionary.find(d => d.name.toLowerCase() === productName.toLowerCase());
+            return defaultMatch ? defaultMatch.price : 0;
+        }
 
         function searchAutocomplete() {
             const input = document.getElementById('itemInput');
@@ -503,36 +509,49 @@
                 return;
             }
 
-            // Uniamo il dizionario fisso con le cose comprate in passato dall'utente
-            const userHistoryNames = Object.keys(getActiveMarket().history);
+            // Recupera tutti i prodotti passati scritti dall'utente in qualsiasi negozio
+            const globalHistoryNames = new Set();
+            Object.keys(localState.markets).forEach(mName => {
+                Object.keys(localState.markets[mName].history || {}).forEach(name => globalHistoryNames.add(name));
+            });
+
             const combinedDictionary = [...smartDictionary];
-            
-            userHistoryNames.forEach(histName => {
+            globalHistoryNames.forEach(histName => {
                 if(!combinedDictionary.some(d => d.name.toLowerCase() === histName.toLowerCase())) {
-                    combinedDictionary.push({
-                        name: histName,
-                        cat: getActiveMarket().history[histName].category
+                    // Trova la categoria salvata
+                    let foundCat = defaultCategories[2]; // di default "Dispensa"
+                    Object.keys(localState.markets).forEach(mName => {
+                        if(localState.markets[mName].history[histName]) foundCat = localState.markets[mName].history[histName].category;
                     });
+                    combinedDictionary.push({ name: histName, cat: foundCat });
                 }
             });
 
-            // Filtra i suggerimenti coerenti con le lettere scritte e con i reparti esistenti
             const matches = combinedDictionary.filter(item => 
                 item.name.toLowerCase().includes(filter) && activeCategories.includes(item.cat)
-            ).slice(0, 5); // Mostra al massimo 5 risultati
+            ).slice(0, 5);
 
             if (matches.length > 0) {
                 listContainer.innerHTML = '';
                 listContainer.style.display = 'block';
                 matches.forEach(match => {
+                    const estimatedPrice = findEstimatedPriceGlobal(match.name);
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
-                    div.innerHTML = `<span>${match.name}</span><span class="suggestion-cat">${match.cat}</span>`;
+                    div.innerHTML = `<span>${match.name} ${estimatedPrice > 0 ? `(~${estimatedPrice.toFixed(2)}€)` : ''}</span><span class="suggestion-cat">${match.cat}</span>`;
                     div.onclick = () => selectSuggestion(match.name, match.cat);
                     listContainer.appendChild(div);
                 });
             } else {
                 listContainer.style.display = 'none';
+            }
+
+            // Auto-stima istantanea mentre scrivi (se c'è corrispondenza esatta)
+            const exactMatch = combinedDictionary.find(d => d.name.toLowerCase() === input.value.trim().toLowerCase());
+            if (exactMatch) {
+                const estPrice = findEstimatedPriceGlobal(exactMatch.name);
+                document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
+                document.getElementById('categoryInput').value = exactMatch.cat;
             }
         }
 
@@ -541,11 +560,8 @@
             document.getElementById('categoryInput').value = category;
             document.getElementById('autocompleteList').style.display = 'none';
             
-            // Se l'utente ha memorizzato un prezzo storico per questo articolo, pre-compila il campo
-            const history = getActiveMarket().history || {};
-            if(history[name]) {
-                document.getElementById('priceInput').value = history[name].price || '';
-            }
+            const estPrice = findEstimatedPriceGlobal(name);
+            document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
         }
 
         function renderFrequentChips() {
@@ -554,12 +570,11 @@
             const history = getActiveMarket().history || {};
             const activeCategories = getActiveMarket().categories;
 
-            // Trasforma l'oggetto cronologia in un array ordinato dal più comprato al meno comprato
             const sortedHistory = Object.keys(history)
                 .map(name => ({ name: name, ...history[name] }))
-                .filter(item => activeCategories.includes(item.category)) // Solo se la categoria esiste ancora
+                .filter(item => activeCategories.includes(item.category))
                 .sort((a, b) => b.count - a.count)
-                .slice(0, 6); // Mostra i primi 6 bottoni veloci
+                .slice(0, 6);
 
             if (sortedHistory.length > 0) {
                 zone.style.display = 'block';
@@ -567,15 +582,16 @@
                 sortedHistory.forEach(item => {
                     const btn = document.createElement('button');
                     btn.className = 'frequent-chip';
-                    btn.innerText = `+ ${item.name}`;
+                    // Mostra il prezzo stimato direttamente sul bottone rapido
+                    const currentEst = findEstimatedPriceGlobal(item.name);
+                    btn.innerText = `+ ${item.name} ${currentEst > 0 ? `(${currentEst.toFixed(2)}€)` : ''}`;
                     btn.onclick = () => {
-                        // Aggiunge direttamente l'articolo al volo alla lista
                         getActiveMarket().items.push({
                             id: Date.now(),
                             name: item.name,
                             category: item.category,
                             qty: 1,
-                            price: item.price || 0,
+                            price: currentEst || 0,
                             completed: false
                         });
                         pushToCloud();
@@ -587,16 +603,11 @@
             }
         }
 
-        // Chiude il menu dei suggerimenti se clicchi in un punto vuoto dello schermo
         document.addEventListener('click', (e) => {
             if (e.target.id !== 'itemInput') {
                 document.getElementById('autocompleteList').style.display = 'none';
             }
         });
-
-        // ==========================================
-        // 3. LOGICA CORE DELL'APPLICAZIONE
-        // ==========================================
 
         function updateMarketSelectorUI() {
             const select = document.getElementById('marketSelect');
@@ -777,15 +788,13 @@
             if (text !== '' && categorySelect.value) {
                 const activeMarket = getActiveMarket();
                 
-                // Aggiorniamo la cronologia dei più comprati (history)
                 if (!activeMarket.history) activeMarket.history = {};
                 if (!activeMarket.history[text]) {
                     activeMarket.history[text] = { category: categorySelect.value, count: 0, price: price };
                 }
                 activeMarket.history[text].count += 1;
-                if(price > 0) activeMarket.history[text].price = price; // memorizza l'ultimo prezzo valido
+                if(price > 0) activeMarket.history[text].price = price;
 
-                // Aggiungiamo l'articolo alla lista corrente
                 activeMarket.items.push({ 
                     id: Date.now(), 
                     name: text, 
@@ -837,7 +846,6 @@
             }
         }
 
-        // Registration PWA Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js')
