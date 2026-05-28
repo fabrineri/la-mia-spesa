@@ -65,6 +65,7 @@
             gap: 8px;
             margin-bottom: 12px;
             flex-wrap: wrap;
+            position: relative; /* Serve per posizionare il menu autocompletamento */
         }
 
         input[type="text"], input[type="number"], select {
@@ -99,6 +100,65 @@
 
         button.add-btn:active { opacity: 0.7; }
 
+        /* Stile menu a tendina Autocompletamento */
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #E5E5EA;
+            border-radius: 10px;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: -8px;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            cursor: pointer;
+            font-size: 15px;
+            border-bottom: 1px solid #F2F2F7;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background-color: #F2F2F7; }
+        .suggestion-cat { font-size: 12px; color: var(--gray); align-self: center; }
+
+        /* Sezione Prodotti Frequenti */
+        .frequent-products-zone {
+            margin-bottom: 20px;
+        }
+        .frequent-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+        .frequent-chips-container {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .frequent-chip {
+            background-color: #E5F1FF;
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s;
+        }
+        .frequent-chip:active { background-color: #CCE3FF; }
+
+        /* Gestione Categorie */
         .category-manager {
             background-color: #F2F2F7;
             border-radius: 12px;
@@ -290,7 +350,7 @@
 <body>
 
     <div class="container">
-        <h1>SuperSpesa Cloud 🛒</h1>
+        <h1>SuperSpesa Smart Cloud 🛒</h1>
         
         <div class="market-selector-zone">
             <div class="market-selector-title">Supermercato Corrente</div>
@@ -321,13 +381,19 @@
         </div>
 
         <div class="input-group" style="margin-bottom: 6px;">
-            <input type="text" id="itemInput" placeholder="Cosa ti serve?" onkeypress="handleKeyPress(event)">
+            <input type="text" id="itemInput" placeholder="Cosa ti serve?" onkeyup="searchAutocomplete()" onkeypress="handleKeyPress(event)" autocomplete="off">
             <select id="categoryInput"></select>
+            <div id="autocompleteList" class="autocomplete-suggestions"></div>
         </div>
-        <div class="input-group">
+        <div class="input-group" style="margin-bottom: 20px;">
             <input type="number" id="qtyInput" placeholder="Qtà" min="1" value="1">
             <input type="number" id="priceInput" placeholder="Prezzo (€)" min="0" step="0.01">
             <button class="add-btn" style="flex: 1;" onclick="addItem()">+</button>
+        </div>
+
+        <div class="frequent-products-zone" id="frequentZone" style="display: none;">
+            <div class="frequent-title">⭐ Più comprati in questo negozio:</div>
+            <div class="frequent-chips-container" id="frequentChips"></div>
         </div>
 
         <div id="shoppingListContainer"></div>
@@ -373,48 +439,164 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        
-        // Riferimento al documento unico sul cloud
-        const docRef = db.collection("appData").doc("shoppingState");
+
+        const docRef = firestoreDB.collection("appData").doc("shoppingState");
 
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
             "Carne e Pesce 🥩", "Latticini e Frigo 🧀", "Bevande 💧", 
-            "Igiene e Casa 🧻", "Surgelati 🧊"
+            "Igiene e Casa 🧻", "Surgelati 🧊", "Flaminia 🎀"
         ];
 
-        // Stato locale temporaneo dell'applicazione
+        // Dizionario intelligente per l'autocompletamento iniziale
+        const smartDictionary = [
+            { name: "Mele", cat: "Ortofrutta 🍎" }, { name: "Banane", cat: "Ortofrutta 🍎" }, { name: "Insalata", cat: "Ortofrutta 🍎" }, { name: "Pomodori", cat: "Ortofrutta 🍎" },
+            { name: "Pane", cat: "Pane e Forno 🥖" }, { name: "Biscotti", cat: "Pane e Forno 🥖" }, { name: "Crackers", cat: "Pane e Forno 🥖" }, { name: "Cornetti", cat: "Pane e Forno 🥖" },
+            { name: "Pasta", cat: "Dispensa 🍝" }, { name: "Riso", cat: "Dispensa 🍝" }, { name: "Passata di pomodoro", cat: "Dispensa 🍝" }, { name: "Olio d'oliva", cat: "Dispensa 🍝" }, { name: "Zucchero", cat: "Dispensa 🍝" }, { name: "Caffè", cat: "Dispensa 🍝" },
+            { name: "Petto di Pollo", cat: "Carne e Pesce 🥩" }, { name: "Macinato", cat: "Carne e Pesce 🥩" }, { name: "Salmone", cat: "Carne e Pesce 🥩" }, { name: "Prosciutto", cat: "Carne e Pesce 🥩" },
+            { name: "Latte", cat: "Latticini e Frigo 🧀" }, { name: "Mozzarella", cat: "Latticini e Frigo 🧀" }, { name: "Yogurt", cat: "Latticini e Frigo 🧀" }, { name: "Burro", cat: "Latticini e Frigo 🧀" }, { name: "Uova", cat: "Latticini e Frigo 🧀" },
+            { name: "Acqua Naturale", cat: "Bevande 💧" }, { name: "Acqua Frizzante", cat: "Bevande 💧" }, { name: "Birra", cat: "Bevande 💧" }, { name: "Vino", cat: "Bevande 💧" }, { name: "Succo di frutta", cat: "Bevande 💧" },
+            { name: "Carta Igienica", cat: "Igiene e Casa 🧻" }, { name: "Scottex", cat: "Igiene e Casa 🧻" }, { name: "Sapone Piatti", cat: "Igiene e Casa 🧻" }, { name: "Dentifricio", cat: "Igiene e Casa 🧻" }, { name: "Sacco Spazzatura", cat: "Igiene e Casa 🧻" },
+            { name: "Gelato", cat: "Surgelati 🧊" }, { name: "Piselli surgelati", cat: "Surgelati 🧊" }, { name: "Pizza surgelata", cat: "Surgelati 🧊" }, { name: "Bastoncini di pesce", cat: "Surgelati 🧊" }
+        ];
+
         let localState = {
             currentMarket: "Supermercato Standard",
             markets: {
-                "Supermercato Standard": { categories: [...defaultCategories], items: [] }
+                "Supermercato Standard": { categories: [...defaultCategories], items: [], history: {} }
             }
         };
 
         function getActiveMarket() { 
+            // Fix protettivo se il cloud non ha ancora il campo history
+            if(!localState.markets[localState.currentMarket].history) {
+                localState.markets[localState.currentMarket].history = {};
+            }
             return localState.markets[localState.currentMarket]; 
         }
 
-        // Caricamento asincrono in tempo reale da Cloud Firebase
-        db.collection("appData").doc("shoppingState").onSnapshot((doc) => {
+        function pushToCloud() { docRef.set(localState); }
+
+        docRef.onSnapshot((doc) => {
             if (doc.exists) {
                 localState = doc.data();
             } else {
-                // Se il cloud è vuoto, lo inizializziamo con i dati di default
                 docRef.set(localState);
             }
             updateMarketSelectorUI();
             updateCategoryUI();
             renderList();
+            renderFrequentChips();
         });
 
-        // Invia i dati al cloud Firebase
-        function pushToCloud() {
-            docRef.set(localState);
+        // ==========================================
+        // 2. FUNZIONI AUTOCOMPLETAMENTO E FREQUENTI
+        // ==========================================
+
+        function searchAutocomplete() {
+            const input = document.getElementById('itemInput');
+            const listContainer = document.getElementById('autocompleteList');
+            const filter = input.value.trim().toLowerCase();
+            const activeCategories = getActiveMarket().categories;
+
+            if (!filter) {
+                listContainer.style.display = 'none';
+                return;
+            }
+
+            // Uniamo il dizionario fisso con le cose comprate in passato dall'utente
+            const userHistoryNames = Object.keys(getActiveMarket().history);
+            const combinedDictionary = [...smartDictionary];
+            
+            userHistoryNames.forEach(histName => {
+                if(!combinedDictionary.some(d => d.name.toLowerCase() === histName.toLowerCase())) {
+                    combinedDictionary.push({
+                        name: histName,
+                        cat: getActiveMarket().history[histName].category
+                    });
+                }
+            });
+
+            // Filtra i suggerimenti coerenti con le lettere scritte e con i reparti esistenti
+            const matches = combinedDictionary.filter(item => 
+                item.name.toLowerCase().includes(filter) && activeCategories.includes(item.cat)
+            ).slice(0, 5); // Mostra al massimo 5 risultati
+
+            if (matches.length > 0) {
+                listContainer.innerHTML = '';
+                listContainer.style.display = 'block';
+                matches.forEach(match => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.innerHTML = `<span>${match.name}</span><span class="suggestion-cat">${match.cat}</span>`;
+                    div.onclick = () => selectSuggestion(match.name, match.cat);
+                    listContainer.appendChild(div);
+                });
+            } else {
+                listContainer.style.display = 'none';
+            }
         }
 
+        function selectSuggestion(name, category) {
+            document.getElementById('itemInput').value = name;
+            document.getElementById('categoryInput').value = category;
+            document.getElementById('autocompleteList').style.display = 'none';
+            
+            // Se l'utente ha memorizzato un prezzo storico per questo articolo, pre-compila il campo
+            const history = getActiveMarket().history || {};
+            if(history[name]) {
+                document.getElementById('priceInput').value = history[name].price || '';
+            }
+        }
+
+        function renderFrequentChips() {
+            const container = document.getElementById('frequentChips');
+            const zone = document.getElementById('frequentZone');
+            const history = getActiveMarket().history || {};
+            const activeCategories = getActiveMarket().categories;
+
+            // Trasforma l'oggetto cronologia in un array ordinato dal più comprato al meno comprato
+            const sortedHistory = Object.keys(history)
+                .map(name => ({ name: name, ...history[name] }))
+                .filter(item => activeCategories.includes(item.category)) // Solo se la categoria esiste ancora
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 6); // Mostra i primi 6 bottoni veloci
+
+            if (sortedHistory.length > 0) {
+                zone.style.display = 'block';
+                container.innerHTML = '';
+                sortedHistory.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.className = 'frequent-chip';
+                    btn.innerText = `+ ${item.name}`;
+                    btn.onclick = () => {
+                        // Aggiunge direttamente l'articolo al volo alla lista
+                        getActiveMarket().items.push({
+                            id: Date.now(),
+                            name: item.name,
+                            category: item.category,
+                            qty: 1,
+                            price: item.price || 0,
+                            completed: false
+                        });
+                        pushToCloud();
+                    };
+                    container.appendChild(btn);
+                });
+            } else {
+                zone.style.display = 'none';
+            }
+        }
+
+        // Chiude il menu dei suggerimenti se clicchi in un punto vuoto dello schermo
+        document.addEventListener('click', (e) => {
+            if (e.target.id !== 'itemInput') {
+                document.getElementById('autocompleteList').style.display = 'none';
+            }
+        });
+
         // ==========================================
-        // 2. FUNZIONI DI GESTIONE INTERFACCIA
+        // 3. LOGICA CORE DELL'APPLICAZIONE
         // ==========================================
 
         function updateMarketSelectorUI() {
@@ -438,7 +620,7 @@
             const input = document.getElementById('newMarketInput');
             const name = input.value.trim();
             if (name !== '' && !localState.markets[name]) {
-                localState.markets[name] = { categories: [...defaultCategories], items: [] };
+                localState.markets[name] = { categories: [...defaultCategories], items: [], history: {} };
                 localState.currentMarket = name;
                 input.value = '';
                 pushToCloud();
@@ -594,7 +776,18 @@
             const price = parseFloat(priceInput.value) || 0;
             
             if (text !== '' && categorySelect.value) {
-                getActiveMarket().items.push({ 
+                const activeMarket = getActiveMarket();
+                
+                // Aggiorniamo la cronologia dei più comprati (history)
+                if (!activeMarket.history) activeMarket.history = {};
+                if (!activeMarket.history[text]) {
+                    activeMarket.history[text] = { category: categorySelect.value, count: 0, price: price };
+                }
+                activeMarket.history[text].count += 1;
+                if(price > 0) activeMarket.history[text].price = price; // memorizza l'ultimo prezzo valido
+
+                // Aggiungiamo l'articolo alla lista corrente
+                activeMarket.items.push({ 
                     id: Date.now(), 
                     name: text, 
                     category: categorySelect.value,
@@ -645,14 +838,12 @@
             }
         }
 
-        // ==========================================
-        // 3. REGISTRAZIONE AUTOMATICA SERVICE WORKER
-        // ==========================================
+        // Registration PWA Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service Worker registrato con successo!', reg))
-                    .catch(err => console.error('Errore registrazione Service Worker', err));
+                    .then(reg => console.log('Service Worker registrato!', reg))
+                    .catch(err => console.error('Errore SW', err));
             });
         }
     </script>
