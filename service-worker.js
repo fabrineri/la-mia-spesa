@@ -1,6 +1,6 @@
 const CACHE_NAME = 'spesa-v1';
 const ASSETS = [
-  'spesa.html',
+  'index.html',
   'manifest.json'
 ];
 
