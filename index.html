@@ -44,10 +44,45 @@
             font-weight: 800;
             letter-spacing: -0.5px;
             margin-top: 10px;
-            margin-bottom: 24px;
+            margin-bottom: 6px;
             background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        /* STRUTTURA DELLA BARRA DI PROGRESSO NEON */
+        .progress-container {
+            margin-bottom: 24px;
+            text-align: center;
+            display: none; /* Nascosta di default, appare se ci sono elementi */
+        }
+
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            height: 10px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue));
+            box-shadow: 0 0 12px var(--neon-blue);
+            border-radius: 20px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
         .glass-panel {
@@ -104,7 +139,6 @@
         #qtyInput { width: 75px; text-align: center; }
         #priceInput { width: 95px; }
 
-        /* PULSANTE MICROFONO ESTERNO E INDIPENDENTE */
         .voice-btn {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -338,6 +372,13 @@
     <div class="container">
         <h1>SuperSpesa Pro Cloud 🛒</h1>
         
+        <div class="progress-container" id="progressZone">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <div class="progress-text" id="progressLabel">0 / 0 prodotti nel carrello (0%)</div>
+        </div>
+        
         <div class="glass-panel">
             <div class="section-title">Supermercato Corrente</div>
             <div class="input-group" style="margin-bottom: 0;">
@@ -428,8 +469,8 @@
 
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
-            "Carne e Pesce 🥩", "Latticini e Frigo 🧀", "Bevande 💧", 
-            "Igiene e Casa 🧻", "Surgelati 🧊"
+            "Carne e Pesce 🥩", "Latticini e Frigo ➔ 🧀", "Bevande 💧", 
+            "Igiene e Casa 🧻", "Surgelati 🧊", "Flaminia 🎀"
         ];
 
         const smartDictionary = [
@@ -450,7 +491,7 @@
             }
         };
 
-        // SCHERMO SEMPRE ACCESO
+        // SCHERMO SEMPRE ACCESO (WAKE LOCK)
         let wakeLock = null;
         async function requestWakeLock() {
             try {
@@ -785,6 +826,23 @@
 
             let totaleEsecuzioneLista = 0;
             let totaleCarrello = 0;
+            
+            // AGGIORNAMENTO AGGREGATO BARRA DI PROGRESSO
+            let totaleProdottiDellaLista = activeMarket.items.length;
+            let prodottiCompletatiCarrello = activeMarket.items.filter(item => item.completed).length;
+
+            const progressZone = document.getElementById('progressZone');
+            const progressBar = document.getElementById('progressBar');
+            const progressLabel = document.getElementById('progressLabel');
+
+            if (totaleProdottiDellaLista > 0) {
+                progressZone.style.display = 'block';
+                let percentuale = Math.round((prodottiCompletatiCarrello / totaleProdottiDellaLista) * 100);
+                progressBar.style.width = `${percentuale}%`;
+                progressLabel.innerText = `${prodottiCompletatiCarrello} / ${totaleProdottiDellaLista} prodotti nel carrello (${percentuale}%)`;
+            } else {
+                progressZone.style.display = 'none';
+            }
 
             activeMarket.categories.forEach(reparto => {
                 const prodottiNelReparto = activeMarket.items.filter(item => item.category === reparto);
