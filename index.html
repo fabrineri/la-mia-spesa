@@ -36,17 +36,6 @@
             width: 100%;
             max-width: 480px;
             margin-bottom: 40px;
-            display: none; /* Nascosto fino all'avvenuta autenticazione */
-        }
-
-        /* SCHERMATA LOGIN DI SICUREZZA */
-        .login-screen {
-            width: 100%;
-            max-width: 400px;
-            margin: auto;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
 
         h1 {
@@ -122,7 +111,7 @@
             position: relative;
         }
 
-        input[type="text"], input[type="number"], input[type="email"], input[type="password"], select {
+        input[type="text"], input[type="number"], select {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 14px;
@@ -171,7 +160,7 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 49, 49, 0); }
         }
 
-        button.add-btn, button.login-btn {
+        button.add-btn {
             background: linear-gradient(135deg, var(--neon-blue), #00A3FF);
             color: #000;
             font-weight: bold;
@@ -181,9 +170,13 @@
             font-size: 16px;
             cursor: pointer;
             transition: transform 0.1s, opacity 0.2s;
+            width: 52px; 
+            font-size: 22px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
         }
-        button.add-btn { width: 52px; font-size: 22px; display: flex; align-items: center; justify-content: center; }
-        button.add-btn:active, button.login-btn:active { transform: scale(0.95); opacity: 0.9; }
+        button.add-btn:active { transform: scale(0.95); opacity: 0.9; }
 
         .autocomplete-suggestions {
             position: absolute;
@@ -303,27 +296,13 @@
         .clear-btn { flex: 1; border: 1px solid transparent; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
         #clearCompletedBtn { background: rgba(0, 229, 255, 0.08); border-color: rgba(0, 229, 255, 0.2); color: var(--neon-blue); }
         #resetAllBtn { background: rgba(255, 49, 49, 0.08); border-color: rgba(255, 49, 49, 0.2); color: var(--neon-red); }
-        .logout-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); width: 100%; margin-top: 10px; }
         
         .delete-cat-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; width: 52px; color: var(--text-muted); cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="login-screen" id="loginScreen">
-        <h1 style="margin-bottom: 24px;">SuperSpesa Pro Private 🔒</h1>
-        <div class="glass-panel">
-            <div class="section-title">Accesso Richiesto</div>
-            <div class="input-group" style="flex-direction: column; gap: 14px;">
-                <input type="email" id="loginEmail" placeholder="Email privata">
-                <input type="password" id="loginPassword" placeholder="Password">
-                <button class="login-btn" onclick="handleLogin()">Accedi alla Lista</button>
-            </div>
-            <div id="loginError" style="color: var(--neon-red); font-size: 13px; text-align: center; margin-top: 10px; display: none;"></div>
-        </div>
-    </div>
-
-    <div class="container" id="appContainer">
+    <div class="container">
         <h1>SuperSpesa Pro Cloud 🛒</h1>
         
         <div class="progress-container" id="progressZone">
@@ -397,12 +376,10 @@
         <div class="action-buttons-container">
             <button id="clearCompletedBtn" class="clear-btn" onclick="clearCompleted()">Svuota Carrello 🧹</button>
             <button id="resetAllBtn" class="clear-btn" onclick="resetAllList()">Azzera Lista 🗑️</button>
-            <button class="clear-btn logout-btn" onclick="handleLogout()">Esci dall'account 🚪</button>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
@@ -417,10 +394,9 @@
 
         firebase.initializeApp(firebaseConfig);
         const firestoreDB = firebase.firestore();
-        const auth = firebase.auth();
         const docRef = firestoreDB.collection("appData").doc("shoppingState");
 
-        // CATEGORIE DI DEFAULT AGGIORNATE CON FLAMINIA
+        // CATEGORIE DI DEFAULT CON FLAMINIA INSERITA
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
             "Carne e Pesce 🥩", "Latticini e Frigo ➔ 🧀", "Bevande 💧", 
@@ -445,81 +421,32 @@
             }
         };
 
-        let unsubscribeFirestore = null;
-
-        // CONTROLLO DELLO STATO DI LOGIN DI FIREBASE
-        auth.onAuthStateChanged((user) => {
-            const loginScreen = document.getElementById('loginScreen');
-            const appContainer = document.getElementById('appContainer');
-            
-            if (user) {
-                // Utente loggato con successo
-                loginScreen.style.display = 'none';
-                appContainer.style.display = 'block';
-                
-                // Attiva la sincronizzazione Cloud in tempo reale
-                unsubscribeFirestore = docRef.onSnapshot((doc) => {
-                    if (doc.exists) {
-                        localState = doc.data();
-                    } else {
-                        docRef.set(localState);
-                    }
-                    updateMarketSelectorUI();
-                    updateCategoryUI();
-                    renderList();
-                    renderFrequentChips();
-                }, (error) => {
-                    console.error("Errore Firestore:", error);
-                });
+        // CONNESSIONE DIRETTA ED ASINCRONA IN TEMPO REALE SENZA AUTH
+        docRef.onSnapshot((doc) => {
+            if (doc.exists) {
+                localState = doc.data();
             } else {
-                // Utente non autenticato o disconnesso
-                loginScreen.style.display = 'flex';
-                appContainer.style.display = 'none';
-                if (unsubscribeFirestore) {
-                    unsubscribeFirestore();
-                    unsubscribeFirestore = null;
-                }
+                docRef.set(localState);
             }
+            updateMarketSelectorUI();
+            updateCategoryUI();
+            renderList();
+            renderFrequentChips();
+        }, (error) => {
+            console.error("Errore Realtime Cloud:", error);
         });
 
-        // GESTIONE AZIONE DI LOGIN
-        function handleLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const errorDiv = document.getElementById('loginError');
-            
-            errorDiv.style.display = 'none';
-
-            if (!email || !password) {
-                errorDiv.innerText = "Inserisci sia l'email che la password.";
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            auth.signInWithEmailAndPassword(email, password)
-                .catch((error) => {
-                    errorDiv.innerText = "Accesso negato. Credenziali errate.";
-                    errorDiv.style.display = 'block';
-                });
-        }
-
-        // DISCONNESSIONE DALL'ACCOUNT
-        function handleLogout() {
-            if(confirm("Vuoi disconnetterti da questo dispositivo?")) {
-                auth.signOut();
-            }
-        }
-
-        // MANI IMPEGNATE / DETTATURA
+        // WAKE LOCK SCHERMO ACCESO
         let wakeLock = null;
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); }
-            } catch (err) { console.log("Wake Lock negato"); }
+            } catch (err) { console.log("Wake Lock disattivato"); }
         }
         document.addEventListener('touchstart', requestWakeLock, { once: true });
         document.addEventListener('click', requestWakeLock, { once: true });
 
+        // RICONOSCIMENTO VOCALE
         function startVoiceRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) { alert("Dettatura vocale non supportata."); return; }
@@ -546,7 +473,7 @@
 
         function triggerHapticFeedback() { if (navigator.vibrate) { navigator.vibrate(15); } }
         function getActiveMarket() { if(!localState.markets[localState.currentMarket].history) { localState.markets[localState.currentMarket].history = {}; } return localState.markets[localState.currentMarket]; }
-        function pushToCloud() { if(auth.currentUser) docRef.set(localState); }
+        function pushToCloud() { docRef.set(localState); }
 
         function findEstimatedPriceGlobal(productName) {
             let latestPriceFound = 0;
