@@ -36,6 +36,17 @@
             width: 100%;
             max-width: 480px;
             margin-bottom: 40px;
+            display: none; /* Nascosto fino all'avvenuta autenticazione */
+        }
+
+        /* SCHERMATA LOGIN DI SICUREZZA */
+        .login-screen {
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         h1 {
@@ -50,11 +61,10 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* STRUTTURA DELLA BARRA DI PROGRESSO NEON */
         .progress-container {
             margin-bottom: 24px;
             text-align: center;
-            display: none; /* Nascosta di default, appare se ci sono elementi */
+            display: none;
         }
 
         .progress-bar-bg {
@@ -112,7 +122,7 @@
             position: relative;
         }
 
-        input[type="text"], input[type="number"], select {
+        input[type="text"], input[type="number"], input[type="email"], input[type="password"], select {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 14px;
@@ -122,10 +132,6 @@
             outline: none;
             box-sizing: border-box;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        input[type="text"]::placeholder, input[type="number"]::placeholder {
-            color: var(--text-muted);
         }
 
         input:focus, select:focus {
@@ -150,9 +156,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            -webkit-tap-highlight-color: transparent;
         }
-        .voice-btn:active { transform: scale(0.95); }
         
         .voice-btn.listening {
             border-color: var(--neon-red);
@@ -167,21 +171,19 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 49, 49, 0); }
         }
 
-        button.add-btn {
+        button.add-btn, button.login-btn {
             background: linear-gradient(135deg, var(--neon-blue), #00A3FF);
             color: #000;
             font-weight: bold;
             border: none;
             border-radius: 14px;
-            width: 52px;
-            font-size: 22px;
+            padding: 14px;
+            font-size: 16px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             transition: transform 0.1s, opacity 0.2s;
         }
-        button.add-btn:active { transform: scale(0.95); opacity: 0.9; }
+        button.add-btn { width: 52px; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+        button.add-btn:active, button.login-btn:active { transform: scale(0.95); opacity: 0.9; }
 
         .autocomplete-suggestions {
             position: absolute;
@@ -191,11 +193,9 @@
             background: #121824;
             border: 1px solid var(--neon-blue);
             border-radius: 16px;
-            z-index: 99999 !important;
+            z-index: 99999;
             max-height: 240px;
             overflow-y: auto;
-            box-shadow: 0 12px 40px rgba(0, 229, 255, 0.15);
-            margin-top: 6px;
             display: none;
         }
 
@@ -207,12 +207,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: white;
-            -webkit-tap-highlight-color: rgba(0,0,0,0);
         }
-        .suggestion-item:last-child { border-bottom: none; }
-        .suggestion-item:active { background: linear-gradient(90deg, rgba(0, 229, 255, 0.1), transparent); }
-        .suggestion-cat { font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 8px; }
 
         .frequent-chips-container { display: flex; gap: 8px; flex-wrap: wrap; }
         .frequent-chip {
@@ -224,15 +219,11 @@
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            transition: all 0.2s;
         }
-        .frequent-chip:active { background: rgba(157, 78, 221, 0.3); transform: scale(0.95); }
 
         .category-manager-title {
             font-size: 14px;
             font-weight: 600;
-            color: var(--text-main);
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -240,35 +231,22 @@
         }
         .category-manager-content { display: none; margin-top: 14px; }
         .category-manager-content.open { display: block; }
-        .cat-list { display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 10px 0 0 0; list-style: none; }
+        .cat-list { display: flex; flex-direction: column; gap: 8px; padding: 0; list-style: none; }
         
         .cat-chip {
             background: rgba(255, 255, 255, 0.02);
             padding: 10px 14px;
             border-radius: 12px;
-            font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.2s;
         }
-        .cat-chip.has-items {
-            border-color: rgba(0, 229, 255, 0.3);
-            background: rgba(0, 229, 255, 0.03);
-        }
-        .cat-badge {
-            font-size: 10px;
-            font-weight: bold;
-            background: var(--neon-blue);
-            color: #000;
-            padding: 2px 6px;
-            border-radius: 6px;
-            margin-left: 6px;
-        }
+        .cat-chip.has-items { border-color: rgba(0, 229, 255, 0.3); background: rgba(0, 229, 255, 0.03); }
+        .cat-badge { font-size: 10px; font-weight: bold; background: var(--neon-blue); color: #000; padding: 2px 6px; border-radius: 6px; }
 
         .cat-actions { display: flex; gap: 14px; align-items: center; }
-        .move-btn { background: none; border: none; color: var(--neon-blue); cursor: pointer; font-size: 15px; padding: 4px; }
+        .move-btn { background: none; border: none; color: var(--neon-blue); cursor: pointer; }
         .move-btn:disabled { color: #3A4454; }
 
         .category-header {
@@ -278,8 +256,6 @@
             letter-spacing: 1.2px;
             color: var(--neon-blue);
             margin: 24px 0 8px 6px;
-            display: flex;
-            align-items: center;
         }
 
         .product-list {
@@ -291,16 +267,10 @@
             list-style: none;
         }
 
-        li.product-item {
-            display: flex;
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }
+        li.product-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
         li.product-item:last-child { border-bottom: none; }
-
-        .item-text { flex: 1; font-size: 16px; margin-left: 14px; cursor: pointer; color: white; }
-        .item-details { font-size: 13px; color: var(--text-muted); margin-right: 12px; font-variant-numeric: tabular-nums; }
+        .item-text { flex: 1; font-size: 16px; margin-left: 14px; cursor: pointer; }
+        .item-details { font-size: 13px; color: var(--text-muted); margin-right: 12px; }
 
         .check-btn {
             background: rgba(255, 255, 255, 0.05);
@@ -309,22 +279,13 @@
             width: 26px;
             height: 26px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
         }
 
-        .completed .check-btn {
-            background: var(--neon-green);
-            border-color: var(--neon-green);
-            box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
-        }
-        .completed .check-btn::after { content: "✓"; color: #000; font-size: 15px; font-weight: 900; }
+        .completed .check-btn { background: var(--neon-green); border-color: var(--neon-green); }
+        .completed .check-btn::after { content: "✓"; color: #000; font-size: 15px; font-weight: 900; display: block; text-align: center; line-height: 22px; }
         .completed .item-text { text-decoration: line-through; color: var(--text-muted); }
 
-        .delete-btn { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 6px; }
-        .delete-btn:active { color: var(--neon-red); }
+        .delete-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; }
 
         .budget-dashboard {
             background: linear-gradient(135deg, rgba(22, 28, 38, 0.95), rgba(12, 16, 24, 0.95));
@@ -335,41 +296,34 @@
             display: none;
         }
         .budget-row { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 8px; color: var(--text-muted); }
-        .budget-row:last-child { margin-bottom: 0; }
-        .budget-row.total-highlight {
-            font-size: 18px;
-            font-weight: 700;
-            color: white;
-            border-top: 1px dashed rgba(255,255,255,0.1);
-            padding-top: 10px;
-            margin-top: 10px;
-        }
-        .success-text { color: var(--neon-green); text-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        .budget-row.total-highlight { font-size: 18px; font-weight: 700; color: white; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; margin-top: 10px; }
+        .success-text { color: var(--neon-green); }
 
-        .action-buttons-container { display: flex; gap: 12px; margin-top: 16px; }
-        .clear-btn {
-            flex: 1;
-            border: 1px solid transparent;
-            border-radius: 14px;
-            padding: 14px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: none;
-            text-align: center;
-        }
+        .action-buttons-container { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .clear-btn { flex: 1; border: 1px solid transparent; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
         #clearCompletedBtn { background: rgba(0, 229, 255, 0.08); border-color: rgba(0, 229, 255, 0.2); color: var(--neon-blue); }
-        #clearCompletedBtn:active { background: rgba(0, 229, 255, 0.2); }
         #resetAllBtn { background: rgba(255, 49, 49, 0.08); border-color: rgba(255, 49, 49, 0.2); color: var(--neon-red); }
-        #resetAllBtn:active { background: rgba(255, 49, 49, 0.2); }
+        .logout-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); width: 100%; margin-top: 10px; }
         
-        .delete-cat-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; width: 52px; color: var(--text-muted); font-size: 16px; cursor: pointer; }
+        .delete-cat-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; width: 52px; color: var(--text-muted); cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="login-screen" id="loginScreen">
+        <h1 style="margin-bottom: 24px;">SuperSpesa Pro Private 🔒</h1>
+        <div class="glass-panel">
+            <div class="section-title">Accesso Richiesto</div>
+            <div class="input-group" style="flex-direction: column; gap: 14px;">
+                <input type="email" id="loginEmail" placeholder="Email privata">
+                <input type="password" id="loginPassword" placeholder="Password">
+                <button class="login-btn" onclick="handleLogin()">Accedi alla Lista</button>
+            </div>
+            <div id="loginError" style="color: var(--neon-red); font-size: 13px; text-align: center; margin-top: 10px; display: none;"></div>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer">
         <h1>SuperSpesa Pro Cloud 🛒</h1>
         
         <div class="progress-container" id="progressZone">
@@ -441,16 +395,14 @@
         </div>
 
         <div class="action-buttons-container">
-            <button id="clearCompletedBtn" class="clear-btn" onclick="clearCompleted()">
-                Svuota Carrello 🧹
-            </button>
-            <button id="resetAllBtn" class="clear-btn" onclick="resetAllList()">
-                Azzera Lista 🗑️
-            </button>
+            <button id="clearCompletedBtn" class="clear-btn" onclick="clearCompleted()">Svuota Carrello 🧹</button>
+            <button id="resetAllBtn" class="clear-btn" onclick="resetAllList()">Azzera Lista 🗑️</button>
+            <button class="clear-btn logout-btn" onclick="handleLogout()">Esci dall'account 🚪</button>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
@@ -465,8 +417,10 @@
 
         firebase.initializeApp(firebaseConfig);
         const firestoreDB = firebase.firestore();
+        const auth = firebase.auth();
         const docRef = firestoreDB.collection("appData").doc("shoppingState");
 
+        // CATEGORIE DI DEFAULT AGGIORNATE CON FLAMINIA
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
             "Carne e Pesce 🥩", "Latticini e Frigo ➔ 🧀", "Bevande 💧", 
@@ -491,31 +445,88 @@
             }
         };
 
-        // SCHERMO SEMPRE ACCESO (WAKE LOCK)
+        let unsubscribeFirestore = null;
+
+        // CONTROLLO DELLO STATO DI LOGIN DI FIREBASE
+        auth.onAuthStateChanged((user) => {
+            const loginScreen = document.getElementById('loginScreen');
+            const appContainer = document.getElementById('appContainer');
+            
+            if (user) {
+                // Utente loggato con successo
+                loginScreen.style.display = 'none';
+                appContainer.style.display = 'block';
+                
+                // Attiva la sincronizzazione Cloud in tempo reale
+                unsubscribeFirestore = docRef.onSnapshot((doc) => {
+                    if (doc.exists) {
+                        localState = doc.data();
+                    } else {
+                        docRef.set(localState);
+                    }
+                    updateMarketSelectorUI();
+                    updateCategoryUI();
+                    renderList();
+                    renderFrequentChips();
+                }, (error) => {
+                    console.error("Errore Firestore:", error);
+                });
+            } else {
+                // Utente non autenticato o disconnesso
+                loginScreen.style.display = 'flex';
+                appContainer.style.display = 'none';
+                if (unsubscribeFirestore) {
+                    unsubscribeFirestore();
+                    unsubscribeFirestore = null;
+                }
+            }
+        });
+
+        // GESTIONE AZIONE DI LOGIN
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            errorDiv.style.display = 'none';
+
+            if (!email || !password) {
+                errorDiv.innerText = "Inserisci sia l'email che la password.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    errorDiv.innerText = "Accesso negato. Credenziali errate.";
+                    errorDiv.style.display = 'block';
+                });
+        }
+
+        // DISCONNESSIONE DALL'ACCOUNT
+        function handleLogout() {
+            if(confirm("Vuoi disconnetterti da questo dispositivo?")) {
+                auth.signOut();
+            }
+        }
+
+        // MANI IMPEGNATE / DETTATURA
         let wakeLock = null;
         async function requestWakeLock() {
             try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                }
+                if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); }
             } catch (err) { console.log("Wake Lock negato"); }
         }
         document.addEventListener('touchstart', requestWakeLock, { once: true });
         document.addEventListener('click', requestWakeLock, { once: true });
 
-        // DETTATURA VOCALE
         function startVoiceRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Dettatura vocale non supportata in questo browser.");
-                return;
-            }
+            if (!SpeechRecognition) { alert("Dettatura vocale non supportata."); return; }
             
             const recognition = new SpeechRecognition();
             recognition.lang = 'it-IT';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
+            
             const voiceBtn = document.getElementById('voiceBtn');
             voiceBtn.classList.add('listening');
             triggerHapticFeedback();
@@ -529,46 +540,19 @@
                 searchAutocomplete(); 
             };
 
-            recognition.onspeechend = () => { recognition.stop(); };
             recognition.onend = () => { voiceBtn.classList.remove('listening'); };
             recognition.onerror = () => { voiceBtn.classList.remove('listening'); };
         }
 
-        // VIBRAZIONE APTICA
-        function triggerHapticFeedback() {
-            if (navigator.vibrate) {
-                navigator.vibrate(15); 
-            }
-        }
-
-        function getActiveMarket() { 
-            if(!localState.markets[localState.currentMarket].history) {
-                localState.markets[localState.currentMarket].history = {};
-            }
-            return localState.markets[localState.currentMarket]; 
-        }
-
-        function pushToCloud() { docRef.set(localState); }
-
-        docRef.onSnapshot((doc) => {
-            if (doc.exists) {
-                localState = doc.data();
-            } else {
-                docRef.set(localState);
-            }
-            updateMarketSelectorUI();
-            updateCategoryUI();
-            renderList();
-            renderFrequentChips();
-        });
+        function triggerHapticFeedback() { if (navigator.vibrate) { navigator.vibrate(15); } }
+        function getActiveMarket() { if(!localState.markets[localState.currentMarket].history) { localState.markets[localState.currentMarket].history = {}; } return localState.markets[localState.currentMarket]; }
+        function pushToCloud() { if(auth.currentUser) docRef.set(localState); }
 
         function findEstimatedPriceGlobal(productName) {
             let latestPriceFound = 0;
             Object.keys(localState.markets).forEach(mName => {
                 const mHistory = localState.markets[mName].history || {};
-                if (mHistory[productName] && mHistory[productName].price > 0) {
-                    latestPriceFound = mHistory[productName].price;
-                }
+                if (mHistory[productName] && mHistory[productName].price > 0) { latestPriceFound = mHistory[productName].price; }
             });
             if (latestPriceFound > 0) return latestPriceFound;
             const defaultMatch = smartDictionary.find(d => d.name.toLowerCase() === productName.toLowerCase());
@@ -577,9 +561,7 @@
 
         const itemInput = document.getElementById('itemInput');
         ['input', 'keydown', 'keyup', 'change'].forEach(evt => {
-            itemInput.addEventListener(evt, () => {
-                searchAutocomplete();
-            });
+            if(itemInput) { itemInput.addEventListener(evt, () => { searchAutocomplete(); }); }
         });
 
         function searchAutocomplete() {
@@ -588,10 +570,7 @@
             const filter = input.value.trim().toLowerCase();
             const activeCategories = getActiveMarket().categories;
 
-            if (!filter || filter.length < 1) {
-                listContainer.style.display = 'none';
-                return;
-            }
+            if (!filter || filter.length < 1) { listContainer.style.display = 'none'; return; }
 
             const globalHistoryNames = new Set();
             Object.keys(localState.markets).forEach(mName => {
@@ -609,48 +588,29 @@
                 }
             });
 
-            const matches = combinedDictionary.filter(item => 
-                item.name.toLowerCase().includes(filter) && activeCategories.includes(item.cat)
-            ).slice(0, 5);
+            const matches = combinedDictionary.filter(item => item.name.toLowerCase().includes(filter) && activeCategories.includes(item.cat)).slice(0, 5);
 
             if (matches.length > 0) {
                 listContainer.innerHTML = '';
                 listContainer.style.display = 'block';
-                
                 matches.forEach(match => {
                     const estimatedPrice = findEstimatedPriceGlobal(match.name);
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
-                    div.innerHTML = `<span>${match.name} ${estimatedPrice > 0 ? `(~${estimatedPrice.toFixed(2)}€)` : ''}</span><span class="suggestion-cat">${match.cat}</span>`;
+                    div.innerHTML = `<span>${match.name} ${estimatedPrice > 0 ? `(~${estimatedPrice.toFixed(2)}€)` : ''}</span><span style="font-size:11px; color:var(--text-muted); background:rgba(255,255,255,0.06); padding:4px 8px; border-radius:8px;">${match.cat}</span>`;
                     
-                    const selectThis = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        selectSuggestion(match.name, match.cat);
-                    };
-
+                    const selectThis = (e) => { e.preventDefault(); e.stopPropagation(); selectSuggestion(match.name, match.cat); };
                     div.addEventListener('touchstart', selectThis, { passive: false });
                     div.addEventListener('mousedown', selectThis);
-
                     listContainer.appendChild(div);
                 });
-            } else {
-                listContainer.style.display = 'none';
-            }
-
-            const exactMatch = combinedDictionary.find(d => d.name.toLowerCase() === input.value.trim().toLowerCase());
-            if (exactMatch) {
-                const estPrice = findEstimatedPriceGlobal(exactMatch.name);
-                document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
-                document.getElementById('categoryInput').value = exactMatch.cat;
-            }
+            } else { listContainer.style.display = 'none'; }
         }
 
         function selectSuggestion(name, category) {
             document.getElementById('itemInput').value = name;
             document.getElementById('categoryInput').value = category;
             document.getElementById('autocompleteList').style.display = 'none';
-            
             const estPrice = findEstimatedPriceGlobal(name);
             document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
             document.getElementById('itemInput').blur();
@@ -679,29 +639,19 @@
                     btn.innerText = `+ ${item.name} ${currentEst > 0 ? `(${currentEst.toFixed(2)}€)` : ''}`;
                     btn.onclick = () => {
                         triggerHapticFeedback();
-                        getActiveMarket().items.push({
-                            id: Date.now(),
-                            name: item.name,
-                            category: item.category,
-                            qty: 1,
-                            price: currentEst || 0,
-                            completed: false
-                        });
+                        getActiveMarket().items.push({ id: Date.now(), name: item.name, category: item.category, qty: 1, price: currentEst || 0, completed: false });
                         pushToCloud();
                     };
                     container.appendChild(btn);
                 });
-            } else {
-                zone.style.display = 'none';
-            }
+            } else { zone.style.display = 'none'; }
         }
 
-        ['touchstart', 'click'].forEach(evt => {
-            document.addEventListener(evt, (e) => {
-                if (e.target.id !== 'itemInput' && e.target.className !== 'suggestion-item' && e.target.id !== 'voiceBtn') {
-                    document.getElementById('autocompleteList').style.display = 'none';
-                }
-            });
+        document.addEventListener('click', (e) => {
+            if (e.target.id !== 'itemInput' && e.target.className !== 'suggestion-item' && e.target.id !== 'voiceBtn') {
+                const ac = document.getElementById('autocompleteList');
+                if(ac) ac.style.display = 'none';
+            }
         });
 
         function updateMarketSelectorUI() {
@@ -709,18 +659,13 @@
             select.innerHTML = '';
             Object.keys(localState.markets).forEach(marketName => {
                 const opt = document.createElement('option');
-                opt.value = marketName;
-                opt.innerText = marketName;
+                opt.value = marketName; opt.innerText = marketName;
                 if(marketName === localState.currentMarket) opt.selected = true;
                 select.appendChild(opt);
             });
         }
 
-        function changeMarket() {
-            localState.currentMarket = document.getElementById('marketSelect').value;
-            pushToCloud();
-        }
-
+        function changeMarket() { localState.currentMarket = document.getElementById('marketSelect').value; pushToCloud(); }
         function addMarket() {
             const input = document.getElementById('newMarketInput');
             const name = input.value.trim();
@@ -728,17 +673,12 @@
                 triggerHapticFeedback();
                 localState.markets[name] = { categories: [...defaultCategories], items: [], history: {} };
                 localState.currentMarket = name;
-                input.value = '';
-                pushToCloud();
+                input.value = ''; pushToCloud();
             }
         }
 
         function deleteMarket() {
-            const marketNames = Object.keys(localState.markets);
-            if (marketNames.length <= 1) {
-                alert("Devi avere almeno un supermercato attivo!");
-                return;
-            }
+            if (Object.keys(localState.markets).length <= 1) { alert("Devi avere almeno un supermercato attivo!"); return; }
             if (confirm(`Vuoi davvero eliminare "${localState.currentMarket}"?`)) {
                 delete localState.markets[localState.currentMarket];
                 localState.currentMarket = Object.keys(localState.markets)[0];
@@ -763,8 +703,7 @@
             select.innerHTML = '';
             currentCatList.forEach(cat => {
                 const opt = document.createElement('option');
-                opt.value = cat;
-                opt.innerText = cat;
+                opt.value = cat; opt.innerText = cat;
                 select.appendChild(opt);
             });
             if(savedSelection && currentCatList.includes(savedSelection)) select.value = savedSelection;
@@ -772,52 +711,36 @@
             catListElement.innerHTML = '';
             currentCatList.forEach((cat, index) => {
                 const li = document.createElement('li');
-                
                 const countInCat = currentItems.filter(item => item.category === cat).length;
                 li.className = countInCat > 0 ? 'cat-chip has-items' : 'cat-chip';
                 
-                const isFirst = index === 0;
-                const isLast = index === currentCatList.length - 1;
-
                 li.innerHTML = `
-                    <div>
-                        <span>${cat}</span>
-                        ${countInCat > 0 ? `<span class="cat-badge">${countInCat} pr.</span>` : ''}
-                    </div>
+                    <div><span>${cat}</span>${countInCat > 0 ? `<span class="cat-badge">${countInCat} pr.</span>` : ''}</div>
                     <div class="cat-actions">
-                        <button class="move-btn" onclick="moveCategory(${index}, -1)" ${isFirst ? 'disabled' : ''}>▲</button>
-                        <button class="move-btn" onclick="moveCategory(${index}, 1)" ${isLast ? 'disabled' : ''}>▼</button>
+                        <button class="move-btn" onclick="moveCategory(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
+                        <button class="move-btn" onclick="moveCategory(${index}, 1)" ${index === currentCatList.length - 1 ? 'disabled' : ''}>▼</button>
                         <button class="delete-cat-btn" style="border:none; background:none; padding:4px;" onclick="deleteCategory(${index})">×</button>
-                    </div>
-                `;
+                    </div>`;
                 catListElement.appendChild(li);
             });
         }
 
         function moveCategory(index, direction) {
             const currentCatList = getActiveMarket().categories;
-            const targetIndex = index + direction;
-            if (targetIndex < 0 || targetIndex >= currentCatList.length) return;
-            
-            [currentCatList[index], currentCatList[targetIndex]] = [currentCatList[targetIndex], currentCatList[index]];
+            [currentCatList[index], currentCatList[index + direction]] = [currentCatList[index + direction], currentCatList[index]];
             pushToCloud();
         }
 
         function addCategory() {
             const input = document.getElementById('newCatInput');
             const text = input.value.trim();
-            const currentCatList = getActiveMarket().categories;
-            if (text !== '' && !currentCatList.includes(text)) {
-                currentCatList.push(text);
-                input.value = '';
-                pushToCloud();
+            if (text !== '' && !getActiveMarket().categories.includes(text)) {
+                getActiveMarket().categories.push(text);
+                input.value = ''; pushToCloud();
             }
         }
 
-        function deleteCategory(index) {
-            getActiveMarket().categories.splice(index, 1);
-            pushToCloud();
-        }
+        function deleteCategory(index) { getActiveMarket().categories.splice(index, 1); pushToCloud(); }
 
         function renderList() {
             const container = document.getElementById('shoppingListContainer');
@@ -827,7 +750,6 @@
             let totaleEsecuzioneLista = 0;
             let totaleCarrello = 0;
             
-            // AGGIORNAMENTO AGGREGATO BARRA DI PROGRESSO
             let totaleProdottiDellaLista = activeMarket.items.length;
             let prodottiCompletatiCarrello = activeMarket.items.filter(item => item.completed).length;
 
@@ -840,17 +762,14 @@
                 let percentuale = Math.round((prodottiCompletatiCarrello / totaleProdottiDellaLista) * 100);
                 progressBar.style.width = `${percentuale}%`;
                 progressLabel.innerText = `${prodottiCompletatiCarrello} / ${totaleProdottiDellaLista} prodotti nel carrello (${percentuale}%)`;
-            } else {
-                progressZone.style.display = 'none';
-            }
+            } else { progressZone.style.display = 'none'; }
 
             activeMarket.categories.forEach(reparto => {
                 const prodottiNelReparto = activeMarket.items.filter(item => item.category === reparto);
 
                 if (prodottiNelReparto.length > 0) {
                     const header = document.createElement('div');
-                    header.className = 'category-header';
-                    header.innerText = reparto;
+                    header.className = 'category-header'; header.innerText = reparto;
                     container.appendChild(header);
 
                     const ul = document.createElement('ul');
@@ -865,9 +784,7 @@
                         if (item.completed) totaleCarrello += costoTotaleProdotto;
 
                         let infoString = `x${item.qty}`;
-                        if (item.price > 0) {
-                            infoString += ` (${item.price.toFixed(2)}€ cad. = ${costoTotaleProdotto.toFixed(2)}€)`;
-                        }
+                        if (item.price > 0) { infoString += ` (${item.price.toFixed(2)}€ cad. = ${costoTotaleProdotto.toFixed(2)}€)`; }
 
                         li.innerHTML = `
                             <button class="check-btn" onclick="toggleItem(${item.id})"></button>
@@ -886,16 +803,13 @@
                 budgetDashboard.style.display = 'block';
                 document.getElementById('estimatedTotal').innerText = `${totaleEsecuzioneLista.toFixed(2)} €`;
                 document.getElementById('cartTotal').innerText = `${totaleCarrello.toFixed(2)} €`;
-            } else {
-                budgetDashboard.style.display = 'none';
-            }
+            } else { budgetDashboard.style.display = 'none'; }
 
             const haProdottiCompletati = activeMarket.items.some(item => item.completed);
             const haProdottiInTotale = activeMarket.items.length > 0;
 
             document.getElementById('clearCompletedBtn').style.display = 'block';
             document.getElementById('resetAllBtn').style.display = 'block';
-            
             document.getElementById('clearCompletedBtn').style.opacity = haProdottiCompletati ? '1' : '0.2';
             document.getElementById('clearCompletedBtn').style.pointerEvents = haProdottiCompletati ? 'auto' : 'none';
             document.getElementById('resetAllBtn').style.opacity = haProdottiInTotale ? '1' : '0.2';
@@ -917,70 +831,40 @@
                 const activeMarket = getActiveMarket();
                 
                 if (!activeMarket.history) activeMarket.history = {};
-                if (!activeMarket.history[text]) {
-                    activeMarket.history[text] = { category: categorySelect.value, count: 0, price: price };
-                }
+                if (!activeMarket.history[text]) { activeMarket.history[text] = { category: categorySelect.value, count: 0, price: price }; }
                 activeMarket.history[text].count += 1;
                 if(price > 0) activeMarket.history[text].price = price;
 
-                activeMarket.items.push({ 
-                    id: Date.now(), 
-                    name: text, 
-                    category: categorySelect.value,
-                    qty: qty,
-                    price: price,
-                    completed: false 
-                });
-                
-                input.value = ''; 
-                qtyInput.value = '1';
-                priceInput.value = '';
+                activeMarket.items.push({ id: Date.now(), name: text, category: categorySelect.value, qty: qty, price: price, completed: false });
+                input.value = ''; qtyInput.value = '1'; priceInput.value = '';
                 pushToCloud();
             }
-        }
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') addItem();
         }
 
         function toggleItem(id) {
             triggerHapticFeedback();
             const activeItems = getActiveMarket().items;
             const index = activeItems.findIndex(item => item.id === id);
-            if (index !== -1) {
-                activeItems[index].completed = !activeItems[index].completed;
-                pushToCloud();
-            }
+            if (index !== -1) { activeItems[index].completed = !activeItems[index].completed; pushToCloud(); }
         }
 
         function deleteItem(id) {
             const activeItems = getActiveMarket().items;
             const index = activeItems.findIndex(item => item.id === id);
-            if (index !== -1) {
-                activeItems.splice(index, 1);
-                pushToCloud();
-            }
+            if (index !== -1) { activeItems.splice(index, 1); pushToCloud(); }
         }
 
         function clearCompleted() {
-            const activeMarket = getActiveMarket();
-            activeMarket.items = activeMarket.items.filter(item => !item.completed);
+            getActiveMarket().items = getActiveMarket().items.filter(item => !item.completed);
             pushToCloud();
         }
 
         function resetAllList() {
-            if (confirm(`Vuoi azzerare la lista di "${localState.currentMarket}"?`)) {
-                getActiveMarket().items = [];
-                pushToCloud();
-            }
+            if (confirm(`Vuoi azzerare la lista?`)) { getActiveMarket().items = []; pushToCloud(); }
         }
 
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service Worker registrato!'))
-                    .catch(err => console.error('Errore SW', err));
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').catch(err => console.error('Errore SW', err)); });
         }
     </script>
 </body>
