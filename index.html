@@ -438,9 +438,8 @@
 		};
 
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        const docRef = firestoreDB.collection("appData").doc("shoppingState");
+        const firestoreDB = firebase.firestore();
+		const docRef = firestoreDB.collection("appData").doc("shoppingState");
 
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
