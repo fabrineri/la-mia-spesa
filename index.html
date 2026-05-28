@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SuperSpesa Premium Cloud 🛒</title>
+    <title>SuperSpesa Pro Cloud 🛒</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B0E14">
     
@@ -50,7 +50,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* CARD STILE NEUMORFICO/GLASS */
         .glass-panel {
             background: var(--panel-bg);
             backdrop-filter: blur(20px);
@@ -78,7 +77,6 @@
             position: relative;
         }
 
-        /* INPUT ACCATTIVANTI */
         input[type="text"], input[type="number"], select {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -101,12 +99,36 @@
             box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
         }
 
-        #itemInput { flex: 2; min-width: 140px; }
+        #itemInput { flex: 2; min-width: 120px; padding-right: 44px; }
         #categoryInput { flex: 1.3; min-width: 110px; background-color: #161C26; }
         #qtyInput { width: 75px; text-align: center; }
         #priceInput { width: 95px; }
 
-        /* PULSANTI SMART */
+        /* PULSANTE MICROFONO INTEGRATO */
+        .voice-btn {
+            position: absolute;
+            right: 175px; /* Allineato dinamicamente dentro il campo testo */
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 10;
+            padding: 8px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .voice-btn.listening {
+            animation: pulse-red 1.2s infinite;
+            text-shadow: 0 0 10px var(--neon-red);
+        }
+
+        @keyframes pulse-red {
+            0% { transform: translateY(-50%) scale(1); opacity: 1; }
+            50% { transform: translateY(-50%) scale(1.2); opacity: 0.5; }
+            100% { transform: translateY(-50%) scale(1); opacity: 1; }
+        }
+
         button.add-btn {
             background: linear-gradient(135deg, var(--neon-blue), #00A3FF);
             color: #000;
@@ -123,7 +145,6 @@
         }
         button.add-btn:active { transform: scale(0.95); opacity: 0.9; }
 
-        /* NUOVA TENDINA AUTOCOMPLETAMENTO AD ALTO CONTRASTO */
         .autocomplete-suggestions {
             position: absolute;
             top: 100%;
@@ -148,16 +169,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: transparent;
             color: white;
             -webkit-tap-highlight-color: rgba(0,0,0,0);
         }
-
         .suggestion-item:last-child { border-bottom: none; }
         .suggestion-item:active { background: linear-gradient(90deg, rgba(0, 229, 255, 0.1), transparent); }
         .suggestion-cat { font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 8px; }
 
-        /* CHIPS NEON */
         .frequent-chips-container { display: flex; gap: 8px; flex-wrap: wrap; }
         .frequent-chip {
             background: rgba(157, 78, 221, 0.12);
@@ -173,7 +191,6 @@
         }
         .frequent-chip:active { background: rgba(157, 78, 221, 0.3); transform: scale(0.95); }
 
-        /* GESTORE CORSIE */
         .category-manager-title {
             font-size: 14px;
             font-weight: 600;
@@ -186,6 +203,7 @@
         .category-manager-content { display: none; margin-top: 14px; }
         .category-manager-content.open { display: block; }
         .cat-list { display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 10px 0 0 0; list-style: none; }
+        
         .cat-chip {
             background: rgba(255, 255, 255, 0.02);
             padding: 10px 14px;
@@ -195,12 +213,27 @@
             align-items: center;
             justify-content: space-between;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
         }
+        /* REPARTI ATTIVI EVIDENZIATI NEL GESTORE */
+        .cat-chip.has-items {
+            border-color: rgba(0, 229, 255, 0.3);
+            background: rgba(0, 229, 255, 0.03);
+        }
+        .cat-badge {
+            font-size: 10px;
+            font-weight: bold;
+            background: var(--neon-blue);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 6px;
+            margin-left: 6px;
+        }
+
         .cat-actions { display: flex; gap: 14px; align-items: center; }
         .move-btn { background: none; border: none; color: var(--neon-blue); cursor: pointer; font-size: 15px; padding: 4px; }
         .move-btn:disabled { color: #3A4454; }
 
-        /* DESIGN LISTA DI COMPRE */
         .category-header {
             font-size: 12px;
             font-weight: 700;
@@ -229,10 +262,9 @@
         }
         li.product-item:last-child { border-bottom: none; }
 
-        .item-text { flex: 1; font-size: 16px; margin-left: 14px; cursor: pointer; color: white; transition: color 0.2s; }
+        .item-text { flex: 1; font-size: 16px; margin-left: 14px; cursor: pointer; color: white; }
         .item-details { font-size: 13px; color: var(--text-muted); margin-right: 12px; font-variant-numeric: tabular-nums; }
 
-        /* SPUNTA DIGITALE STILE APPLE */
         .check-btn {
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid rgba(255, 255, 255, 0.2);
@@ -254,10 +286,9 @@
         .completed .check-btn::after { content: "✓"; color: #000; font-size: 15px; font-weight: 900; }
         .completed .item-text { text-decoration: line-through; color: var(--text-muted); }
 
-        .delete-btn { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 6px; transition: color 0.2s; }
+        .delete-btn { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 6px; }
         .delete-btn:active { color: var(--neon-red); }
 
-        /* DASHBOARD BUDGET FLOATING STYLE */
         .budget-dashboard {
             background: linear-gradient(135deg, rgba(22, 28, 38, 0.95), rgba(12, 16, 24, 0.95));
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -278,7 +309,6 @@
         }
         .success-text { color: var(--neon-green); text-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
 
-        /* BOTTONI AZIONE SOTTO */
         .action-buttons-container { display: flex; gap: 12px; margin-top: 16px; }
         .clear-btn {
             flex: 1;
@@ -303,8 +333,9 @@
 <body>
 
     <div class="container">
-        <h1>SuperSpesa Premium Cloud 🛒</h1>
+        <h1>SuperSpesa Pro Cloud 🛒</h1>
         
+        <!-- SELEZIONE SUPERMERCATO -->
         <div class="glass-panel">
             <div class="section-title">Supermercato Corrente</div>
             <div class="input-group" style="margin-bottom: 0;">
@@ -319,6 +350,7 @@
             </div>
         </div>
         
+        <!-- GESTIONE CORSIE (CON FILTRO CONTEGGIO PRODOTTI ATTIVI) -->
         <div class="glass-panel" style="padding: 16px 20px;">
             <div class="category-manager-title" onclick="toggleCatManager()">
                 <span style="color: #9D4EDD; font-weight: 700;">⚙️ Configura Ordine Corsie</span>
@@ -333,10 +365,12 @@
             </div>
         </div>
 
+        <!-- INPUT CON INTEGRATO SISTEMA DI DETTATURA VOCALE -->
         <div class="glass-panel">
             <div class="section-title">Aggiungi Prodotto</div>
             <div class="input-group">
                 <input type="text" id="itemInput" placeholder="Cosa ti serve?" autocomplete="off" autocorrect="off" spellcheck="false">
+                <button id="voiceBtn" class="voice-btn" onclick="startVoiceRecognition()">🎙️</button>
                 <select id="categoryInput"></select>
                 <div id="autocompleteList" class="autocomplete-suggestions"></div>
             </div>
@@ -347,13 +381,15 @@
             </div>
         </div>
 
+        <!-- PIÙ COMPRATI -->
         <div class="frequent-products-zone" id="frequentZone" style="display: none; margin: 0 6px 16px 6px;">
-            <div class="section-title" style="color: #9D4EDD;">⭐ Spessissimo in questo negozio:</div>
+            <div class="section-title" style="color: #9D4EDD;">⭐ Comprati Spesso:</div>
             <div class="frequent-chips-container" id="frequentChips"></div>
         </div>
 
         <div id="shoppingListContainer"></div>
 
+        <!-- DASHBOARD BUDGET -->
         <div class="budget-dashboard" id="budgetDashboard">
             <div class="budget-row">
                 <span>Totale stimato lista:</span>
@@ -416,6 +452,58 @@
             }
         };
 
+        // INTEGRAZIONE PUNTO 2: FUNZIONE WAKE LOCK (SCHERMO SEMPRE ACCESO)
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log("Wake Lock attivato: lo schermo non si spegnerà.");
+                }
+            } catch (err) { console.log("Wake Lock non concesso o non supportato"); }
+        }
+        document.addEventListener('touchstart', requestWakeLock, { once: true });
+        document.addEventListener('click', requestWakeLock, { once: true });
+
+        // INTEGRAZIONE PUNTO 4: DETTATURA VOCALE
+        function startVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("La dettatura vocale non è supportata su questo browser. Usa Chrome o Safari mobile.");
+                return;
+            }
+            
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'it-IT';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            const voiceBtn = document.getElementById('voiceBtn');
+            voiceBtn.classList.add('listening');
+            triggerHapticFeedback();
+
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                const speechToText = event.results[0][0].transcript;
+                // Capitalizza la prima lettera
+                const formattedText = speechToText.charAt(0).toUpperCase() + speechToText.slice(1);
+                document.getElementById('itemInput').value = formattedText;
+                searchAutocomplete(); 
+            };
+
+            recognition.onspeechend = () => { recognition.stop(); };
+            recognition.onend = () => { voiceBtn.classList.remove('listening'); };
+            recognition.onerror = () => { voiceBtn.classList.remove('listening'); };
+        }
+
+        // INTEGRAZIONE PUNTO 1: TRIGGER VIBRAZIONE FEEDBACK TATTILE
+        function triggerHapticFeedback() {
+            if (navigator.vibrate) {
+                navigator.vibrate(15); 
+            }
+        }
+
         function getActiveMarket() { 
             if(!localState.markets[localState.currentMarket].history) {
                 localState.markets[localState.currentMarket].history = {};
@@ -450,7 +538,6 @@
             return defaultMatch ? defaultMatch.price : 0;
         }
 
-        // SISTEMA DI ASCOLTO UNIVERSALE TASTI MOBILE AGGIORNATO
         const itemInput = document.getElementById('itemInput');
         ['input', 'keydown', 'keyup', 'change'].forEach(evt => {
             itemInput.addEventListener(evt, () => {
@@ -530,6 +617,7 @@
             const estPrice = findEstimatedPriceGlobal(name);
             document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
             document.getElementById('itemInput').blur();
+            triggerHapticFeedback();
         }
 
         function renderFrequentChips() {
@@ -553,6 +641,7 @@
                     const currentEst = findEstimatedPriceGlobal(item.name);
                     btn.innerText = `+ ${item.name} ${currentEst > 0 ? `(${currentEst.toFixed(2)}€)` : ''}`;
                     btn.onclick = () => {
+                        triggerHapticFeedback();
                         getActiveMarket().items.push({
                             id: Date.now(),
                             name: item.name,
@@ -572,7 +661,7 @@
 
         ['touchstart', 'click'].forEach(evt => {
             document.addEventListener(evt, (e) => {
-                if (e.target.id !== 'itemInput' && e.target.className !== 'suggestion-item') {
+                if (e.target.id !== 'itemInput' && e.target.className !== 'suggestion-item' && e.target.id !== 'voiceBtn') {
                     document.getElementById('autocompleteList').style.display = 'none';
                 }
             });
@@ -599,6 +688,7 @@
             const input = document.getElementById('newMarketInput');
             const name = input.value.trim();
             if (name !== '' && !localState.markets[name]) {
+                triggerHapticFeedback();
                 localState.markets[name] = { categories: [...defaultCategories], items: [], history: {} };
                 localState.currentMarket = name;
                 input.value = '';
@@ -626,10 +716,12 @@
             sign.innerText = content.classList.contains('open') ? "▼" : "▶";
         }
 
+        // INTEGRAZIONE PUNTO 3: GESTORE CORSIE INTELLIGENTE CON CONTEGGIO
         function updateCategoryUI() {
             const select = document.getElementById('categoryInput');
             const catListElement = document.getElementById('customCatList');
             const currentCatList = getActiveMarket().categories;
+            const currentItems = getActiveMarket().items || [];
             
             const savedSelection = select.value;
             select.innerHTML = '';
@@ -644,12 +736,19 @@
             catListElement.innerHTML = '';
             currentCatList.forEach((cat, index) => {
                 const li = document.createElement('li');
-                li.className = 'cat-chip';
+                
+                // Conta quanti prodotti attivi ci sono in questa corsia
+                const countInCat = currentItems.filter(item => item.category === cat).length;
+                li.className = countInCat > 0 ? 'cat-chip has-items' : 'cat-chip';
+                
                 const isFirst = index === 0;
                 const isLast = index === currentCatList.length - 1;
 
                 li.innerHTML = `
-                    <span>${cat}</span>
+                    <div>
+                        <span>${cat}</span>
+                        ${countInCat > 0 ? `<span class="cat-badge">${countInCat} pr.</span>` : ''}
+                    </div>
                     <div class="cat-actions">
                         <button class="move-btn" onclick="moveCategory(${index}, -1)" ${isFirst ? 'disabled' : ''}>▲</button>
                         <button class="move-btn" onclick="moveCategory(${index}, 1)" ${isLast ? 'disabled' : ''}>▼</button>
@@ -702,7 +801,6 @@
                     header.innerText = reparto;
                     container.appendChild(header);
 
-                    // Lista raggruppata elegante
                     const ul = document.createElement('ul');
                     ul.className = 'product-list';
                     prodottiNelReparto.forEach(item => {
@@ -763,6 +861,7 @@
             const price = parseFloat(priceInput.value) || 0;
             
             if (text !== '' && categorySelect.value) {
+                triggerHapticFeedback(); // PUNTO 1
                 const activeMarket = getActiveMarket();
                 
                 if (!activeMarket.history) activeMarket.history = {};
@@ -793,6 +892,7 @@
         }
 
         function toggleItem(id) {
+            triggerHapticFeedback(); // PUNTO 1
             const activeItems = getActiveMarket().items;
             const index = activeItems.findIndex(item => item.id === id);
             if (index !== -1) {
