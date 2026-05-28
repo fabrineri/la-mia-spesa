@@ -85,7 +85,7 @@
         #itemInput { flex: 2; min-width: 160px; }
         #categoryInput { flex: 1.5; min-width: 120px; }
         #qtyInput { width: 70px; }
-        #priceInput { width: 90px; background-color: #F2F2F7; } /* Grigio chiaro per indicare stima automatica */
+        #priceInput { width: 90px; background-color: #F2F2F7; }
 
         button.add-btn {
             background-color: var(--primary);
@@ -123,10 +123,11 @@
             border-bottom: 1px solid #F2F2F7;
             display: flex;
             justify-content: space-between;
+            -webkit-tap-highlight-color: transparent; /* Elimina il flash blu su smartphone */
         }
 
         .suggestion-item:last-child { border-bottom: none; }
-        .suggestion-item:hover { background-color: #F2F2F7; }
+        .suggestion-item:hover, .suggestion-item:active { background-color: #F2F2F7; }
         .suggestion-cat { font-size: 12px; color: var(--gray); align-self: center; }
 
         .frequent-products-zone {
@@ -153,6 +154,7 @@
             cursor: pointer;
             border: none;
             transition: background-color 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
         .frequent-chip:active { background-color: #CCE3FF; }
 
@@ -378,7 +380,13 @@
         </div>
 
         <div class="input-group" style="margin-bottom: 6px;">
-            <input type="text" id="itemInput" placeholder="Cosa ti serve?" onkeyup="searchAutocomplete()" onkeypress="handleKeyPress(event)" autocomplete="off">
+            <input type="text" id="itemInput" placeholder="Cosa ti serve?" 
+                   oninput="searchAutocomplete()" 
+                   onkeypress="handleKeyPress(event)" 
+                   autocomplete="off" 
+                   autocorrect="off" 
+                   autocapitalize="sentences" 
+                   spellcheck="false">
             <select id="categoryInput"></select>
             <div id="autocompleteList" class="autocomplete-suggestions"></div>
         </div>
@@ -439,7 +447,6 @@
             "Igiene e Casa 🧻", "Surgelati 🧊", "Flaminia 🎀"
         ];
 
-        // Dizionario intelligente con stime di prezzo standard iniziali (Prezzo Medio)
         const smartDictionary = [
             { name: "Mele", cat: "Ortofrutta 🍎", price: 1.99 }, { name: "Banane", cat: "Ortofrutta 🍎", price: 1.49 }, { name: "Insalata", cat: "Ortofrutta 🍎", price: 1.19 }, { name: "Pomodori", cat: "Ortofrutta 🍎", price: 2.49 },
             { name: "Pane", cat: "Pane e Forno 🥖", price: 1.20 }, { name: "Biscotti", cat: "Pane e Forno 🥖", price: 2.80 }, { name: "Crackers", cat: "Pane e Forno 🥖", price: 1.40 }, { name: "Cornetti", cat: "Pane e Forno 🥖", price: 2.50 },
@@ -479,21 +486,15 @@
             renderFrequentChips();
         });
 
-        // Trova i prezzi stimati cercando in tutta la cronologia cross-market dell'utente
         function findEstimatedPriceGlobal(productName) {
             let latestPriceFound = 0;
-            
-            // 1. Cerca nella cronologia di TUTTI i supermercati per vedere se lo hai mai comprato prima
             Object.keys(localState.markets).forEach(mName => {
                 const mHistory = localState.markets[mName].history || {};
                 if (mHistory[productName] && mHistory[productName].price > 0) {
                     latestPriceFound = mHistory[productName].price;
                 }
             });
-
             if (latestPriceFound > 0) return latestPriceFound;
-
-            // 2. Se non lo hai mai comprato, cerca nel dizionario smart preimpostato
             const defaultMatch = smartDictionary.find(d => d.name.toLowerCase() === productName.toLowerCase());
             return defaultMatch ? defaultMatch.price : 0;
         }
@@ -509,7 +510,6 @@
                 return;
             }
 
-            // Recupera tutti i prodotti passati scritti dall'utente in qualsiasi negozio
             const globalHistoryNames = new Set();
             Object.keys(localState.markets).forEach(mName => {
                 Object.keys(localState.markets[mName].history || {}).forEach(name => globalHistoryNames.add(name));
@@ -518,8 +518,7 @@
             const combinedDictionary = [...smartDictionary];
             globalHistoryNames.forEach(histName => {
                 if(!combinedDictionary.some(d => d.name.toLowerCase() === histName.toLowerCase())) {
-                    // Trova la categoria salvata
-                    let foundCat = defaultCategories[2]; // di default "Dispensa"
+                    let foundCat = defaultCategories[2];
                     Object.keys(localState.markets).forEach(mName => {
                         if(localState.markets[mName].history[histName]) foundCat = localState.markets[mName].history[histName].category;
                     });
@@ -539,14 +538,20 @@
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
                     div.innerHTML = `<span>${match.name} ${estimatedPrice > 0 ? `(~${estimatedPrice.toFixed(2)}€)` : ''}</span><span class="suggestion-cat">${match.cat}</span>`;
+                    
+                    // Ottimizzato per smartphone: intercetta l'evento touch immediato
+                    div.ontouchstart = (e) => {
+                        e.preventDefault(); 
+                        selectSuggestion(match.name, match.cat);
+                    };
                     div.onclick = () => selectSuggestion(match.name, match.cat);
+                    
                     listContainer.appendChild(div);
                 });
             } else {
                 listContainer.style.display = 'none';
             }
 
-            // Auto-stima istantanea mentre scrivi (se c'è corrispondenza esatta)
             const exactMatch = combinedDictionary.find(d => d.name.toLowerCase() === input.value.trim().toLowerCase());
             if (exactMatch) {
                 const estPrice = findEstimatedPriceGlobal(exactMatch.name);
@@ -582,7 +587,6 @@
                 sortedHistory.forEach(item => {
                     const btn = document.createElement('button');
                     btn.className = 'frequent-chip';
-                    // Mostra il prezzo stimato direttamente sul bottone rapido
                     const currentEst = findEstimatedPriceGlobal(item.name);
                     btn.innerText = `+ ${item.name} ${currentEst > 0 ? `(${currentEst.toFixed(2)}€)` : ''}`;
                     btn.onclick = () => {
@@ -603,6 +607,12 @@
             }
         }
 
+        // Evento touch per chiudere i suggerimenti cliccando altrove su mobile
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.id !== 'itemInput') {
+                document.getElementById('autocompleteList').style.display = 'none';
+            }
+        });
         document.addEventListener('click', (e) => {
             if (e.target.id !== 'itemInput') {
                 document.getElementById('autocompleteList').style.display = 'none';
