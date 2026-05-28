@@ -65,7 +65,6 @@
             gap: 8px;
             margin-bottom: 12px;
             flex-wrap: wrap;
-            position: relative;
         }
 
         input[type="text"], input[type="number"], select {
@@ -99,36 +98,6 @@
         }
 
         button.add-btn:active { opacity: 0.7; }
-
-        .autocomplete-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #E5E5EA;
-            border-radius: 10px;
-            z-index: 1000;
-            max-height: 200px;
-            overflow-y: auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-top: -8px;
-            display: none;
-        }
-
-        .suggestion-item {
-            padding: 12px;
-            cursor: pointer;
-            font-size: 15px;
-            border-bottom: 1px solid #F2F2F7;
-            display: flex;
-            justify-content: space-between;
-            -webkit-tap-highlight-color: transparent; /* Elimina il flash blu su smartphone */
-        }
-
-        .suggestion-item:last-child { border-bottom: none; }
-        .suggestion-item:hover, .suggestion-item:active { background-color: #F2F2F7; }
-        .suggestion-cat { font-size: 12px; color: var(--gray); align-self: center; }
 
         .frequent-products-zone {
             margin-bottom: 20px;
@@ -380,15 +349,12 @@
         </div>
 
         <div class="input-group" style="margin-bottom: 6px;">
-            <input type="text" id="itemInput" placeholder="Cosa ti serve?" 
-                   oninput="searchAutocomplete()" 
-                   onkeypress="handleKeyPress(event)" 
-                   autocomplete="off" 
-                   autocorrect="off" 
-                   autocapitalize="sentences" 
-                   spellcheck="false">
+            <input type="text" id="itemInput" list="productsDatalist" placeholder="Cosa ti serve?" 
+                   oninput="handleProductInput()" 
+                   onkeypress="handleKeyPress(event)">
             <select id="categoryInput"></select>
-            <div id="autocompleteList" class="autocomplete-suggestions"></div>
+            
+            <datalist id="productsDatalist"></datalist>
         </div>
         <div class="input-group" style="margin-bottom: 20px;">
             <input type="number" id="qtyInput" placeholder="Qtà" min="1" value="1">
@@ -444,7 +410,7 @@
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
             "Carne e Pesce 🥩", "Latticini e Frigo 🧀", "Bevande 💧", 
-            "Igiene e Casa 🧻", "Surgelati 🧊", "Flaminia 🎀"
+            "Igiene e Casa 🧻", "Surgelati 🧊"
         ];
 
         const smartDictionary = [
@@ -482,6 +448,7 @@
             }
             updateMarketSelectorUI();
             updateCategoryUI();
+            buildGlobalDatalist(); // Popola la datalist nativa appena arrivano i dati
             renderList();
             renderFrequentChips();
         });
@@ -499,74 +466,65 @@
             return defaultMatch ? defaultMatch.price : 0;
         }
 
-        function searchAutocomplete() {
-            const input = document.getElementById('itemInput');
-            const listContainer = document.getElementById('autocompleteList');
-            const filter = input.value.trim().toLowerCase();
-            const activeCategories = getActiveMarket().categories;
-
-            if (!filter) {
-                listContainer.style.display = 'none';
-                return;
-            }
+        // Crea la lista dei suggerimenti nativi combinando dizionario e cronologia cloud
+        function buildGlobalDatalist() {
+            const datalist = document.getElementById('productsDatalist');
+            datalist.innerHTML = '';
 
             const globalHistoryNames = new Set();
             Object.keys(localState.markets).forEach(mName => {
                 Object.keys(localState.markets[mName].history || {}).forEach(name => globalHistoryNames.add(name));
             });
 
-            const combinedDictionary = [...smartDictionary];
+            const combinedProducts = [...smartDictionary];
             globalHistoryNames.forEach(histName => {
-                if(!combinedDictionary.some(d => d.name.toLowerCase() === histName.toLowerCase())) {
+                if(!combinedProducts.some(d => d.name.toLowerCase() === histName.toLowerCase())) {
                     let foundCat = defaultCategories[2];
                     Object.keys(localState.markets).forEach(mName => {
                         if(localState.markets[mName].history[histName]) foundCat = localState.markets[mName].history[histName].category;
                     });
-                    combinedDictionary.push({ name: histName, cat: foundCat });
+                    combinedProducts.push({ name: histName, cat: foundCat });
                 }
             });
 
-            const matches = combinedDictionary.filter(item => 
-                item.name.toLowerCase().includes(filter) && activeCategories.includes(item.cat)
-            ).slice(0, 5);
-
-            if (matches.length > 0) {
-                listContainer.innerHTML = '';
-                listContainer.style.display = 'block';
-                matches.forEach(match => {
-                    const estimatedPrice = findEstimatedPriceGlobal(match.name);
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-item';
-                    div.innerHTML = `<span>${match.name} ${estimatedPrice > 0 ? `(~${estimatedPrice.toFixed(2)}€)` : ''}</span><span class="suggestion-cat">${match.cat}</span>`;
-                    
-                    // Ottimizzato per smartphone: intercetta l'evento touch immediato
-                    div.ontouchstart = (e) => {
-                        e.preventDefault(); 
-                        selectSuggestion(match.name, match.cat);
-                    };
-                    div.onclick = () => selectSuggestion(match.name, match.cat);
-                    
-                    listContainer.appendChild(div);
-                });
-            } else {
-                listContainer.style.display = 'none';
-            }
-
-            const exactMatch = combinedDictionary.find(d => d.name.toLowerCase() === input.value.trim().toLowerCase());
-            if (exactMatch) {
-                const estPrice = findEstimatedPriceGlobal(exactMatch.name);
-                document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
-                document.getElementById('categoryInput').value = exactMatch.cat;
-            }
+            const activeCategories = getActiveMarket().categories;
+            combinedProducts.forEach(item => {
+                if(activeCategories.includes(item.cat)) {
+                    const option = document.createElement('option');
+                    option.value = item.name;
+                    datalist.appendChild(option);
+                }
+            });
         }
 
-        function selectSuggestion(name, category) {
-            document.getElementById('itemInput').value = name;
-            document.getElementById('categoryInput').value = category;
-            document.getElementById('autocompleteList').style.display = 'none';
-            
-            const estPrice = findEstimatedPriceGlobal(name);
-            document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
+        // Funzione attivata sia quando l'utente scrive, sia quando seleziona un suggerimento nativo dal telefono
+        function handleProductInput() {
+            const inputVal = document.getElementById('itemInput').value.trim();
+            if(!inputVal) return;
+
+            const globalHistoryNames = new Set();
+            Object.keys(localState.markets).forEach(mName => {
+                Object.keys(localState.markets[mName].history || {}).forEach(name => globalHistoryNames.add(name));
+            });
+
+            const combinedProducts = [...smartDictionary];
+            globalHistoryNames.forEach(histName => {
+                if(!combinedProducts.some(d => d.name.toLowerCase() === histName.toLowerCase())) {
+                    let foundCat = defaultCategories[2];
+                    Object.keys(localState.markets).forEach(mName => {
+                        if(localState.markets[mName].history[histName]) foundCat = localState.markets[mName].history[histName].category;
+                    });
+                    combinedProducts.push({ name: histName, cat: foundCat });
+                }
+            });
+
+            // Se la parola inserita corrisponde esattamente a un prodotto esistente (scelta fatta da datalist)
+            const match = combinedProducts.find(d => d.name.toLowerCase() === inputVal.toLowerCase());
+            if(match) {
+                document.getElementById('categoryInput').value = match.cat;
+                const estPrice = findEstimatedPriceGlobal(match.name);
+                document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
+            }
         }
 
         function renderFrequentChips() {
@@ -606,18 +564,6 @@
                 zone.style.display = 'none';
             }
         }
-
-        // Evento touch per chiudere i suggerimenti cliccando altrove su mobile
-        document.addEventListener('touchstart', (e) => {
-            if (e.target.id !== 'itemInput') {
-                document.getElementById('autocompleteList').style.display = 'none';
-            }
-        });
-        document.addEventListener('click', (e) => {
-            if (e.target.id !== 'itemInput') {
-                document.getElementById('autocompleteList').style.display = 'none';
-            }
-        });
 
         function updateMarketSelectorUI() {
             const select = document.getElementById('marketSelect');
