@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpesaPro🛒</title>
+    <title>SpesaPro 🛒</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B0E14">
     
+    <!-- Libreria Chart.js per i grafici -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -40,6 +41,7 @@
             max-width: 480px;
             margin-bottom: 80px; /* Spazio per il menu inferiore */
             display: none; /* Nascosta prima del login */
+            position: relative;
         }
 
         /* SCHERMATA DI LOGIN DIRETTA */
@@ -123,6 +125,9 @@
         }
 
         .logout-header-btn {
+            position: absolute;
+            top: 14px;
+            right: 0px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-muted);
@@ -130,22 +135,21 @@
             border-radius: 10px;
             font-size: 12px;
             cursor: pointer;
-            float: right;
-            margin-top: -38px;
+            z-index: 10;
         }
 
-        /* TITOLO AGGIORNATO E PROTETTO DA SOVRAPPOSIZIONI */
+        /* TITOLO CENTRATO E PROTETTO */
         h1 { 
             text-align: center; 
-            padding-right: 85px; 
             font-size: 26px; 
             font-weight: 800; 
             letter-spacing: -0.5px; 
             margin-top: 10px; 
-            margin-bottom: 6px; 
+            margin-bottom: 20px; 
             background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); 
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent; 
+            width: 100%;
         }
 
         .progress-container { margin-bottom: 24px; text-align: center; display: none; }
@@ -250,20 +254,35 @@
 </head>
 <body>
 
+    <!-- OVERLAY DI ACCESSO CONDIVISO (FAMIGLIE) -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
-            <div class="login-title">SpesaPro🔒</div>
-            <input type="text" id="loginEmail" class="login-input" placeholder="Indirizzo Email" autocomplete="email">
-            <input type="password" id="loginPassword" class="login-input" placeholder="Password">
-            <button class="login-btn" id="loginBtnElement" onclick="handleLogin()">Accedi</button>
+            <div class="login-title">SpesaPro 🛒</div>
+            <div id="authFields">
+                <input type="text" id="loginEmail" class="login-input" placeholder="Indirizzo Email" autocomplete="email">
+                <input type="password" id="loginPassword" class="login-input" placeholder="Password">
+                <button class="login-btn" id="loginBtnElement" onclick="handleLogin()">Accedi / Registrati</button>
+            </div>
+            
+            <!-- Pannello configurazione famiglia (Visibile solo al primo accesso) -->
+            <div id="familySetupFields" style="display: none; margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 15px;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Benvenuto! Crea un nuovo gruppo o inserisci il codice di uno esistente per unirti a loro.</p>
+                <input type="text" id="familyCodeInput" class="login-input" placeholder="Codice Famiglia Esistente">
+                <button class="login-btn" style="background: linear-gradient(135deg, var(--neon-purple), #7B2CBF); color:white; margin-bottom: 10px;" onclick="joinFamily()">Unisciti a una Famiglia</button>
+                <button class="login-btn" style="background: linear-gradient(135deg, var(--neon-green), #22C55E);" onclick="createNewFamily()">✨ Crea Nuova Famiglia</button>
+            </div>
+            
             <div id="loginError" class="login-error"></div>
         </div>
     </div>
 
+    <!-- CONTENITORE APPLICAZIONE -->
     <div class="container" id="appContainer">
-        <h1>SpesaPro🛒</h1>
+        <h1>SpesaPro</h1>
+        <div id="familyBadge" style="text-align: center; font-size: 11px; color: var(--neon-purple); margin-top: -15px; margin-bottom: 20px; font-weight: bold; letter-spacing: 1px;"></div>
         <button class="logout-header-btn" onclick="handleLogout()">Esci 🚪</button>
         
+        <!-- VISTA SPESA (SCHEDA 1) -->
         <div id="viewShopping" class="app-view active">
             <div class="progress-container" id="progressZone">
                 <div class="progress-bar-bg">
@@ -272,6 +291,7 @@
                 <div class="progress-text" id="progressLabel">0 / 0 prodotti nel carrello (0%)</div>
             </div>
             
+            <!-- SEZIONE REPORT -->
             <div class="stats-wrapper">
                 <button class="stats-toggle-btn" onclick="toggleStatsPanel()">
                     <span>📊</span> <span id="statsBtnText">Mostra Statistiche Spese</span>
@@ -292,6 +312,7 @@
                 </div>
             </div>
             
+            <!-- SELEZIONE SUPERMERCATO -->
             <div class="glass-panel">
                 <div class="section-title">Supermercato Corrente</div>
                 <div class="input-group" style="margin-bottom: 0;">
@@ -306,6 +327,7 @@
                 </div>
             </div>
             
+            <!-- GESTIONE CORSIE -->
             <div class="glass-panel" style="padding: 16px 20px;">
                 <div class="category-manager-title" onclick="toggleCatManager()">
                     <span style="color: #9D4EDD; font-weight: 700;">⚙️ Configura Ordine Corsie</span>
@@ -320,6 +342,7 @@
                 </div>
             </div>
 
+            <!-- INPUT PRODOTTO -->
             <div class="glass-panel">
                 <div class="section-title">Aggiungi Prodotto in Lista</div>
                 <div class="input-group">
@@ -335,13 +358,16 @@
                 </div>
             </div>
 
+            <!-- PIÙ COMPRATI -->
             <div class="frequent-products-zone" id="frequentZone" style="display: none; margin: 0 6px 16px 6px;">
                 <div class="section-title" style="color: #9D4EDD;">⭐ Comprati Spesso:</div>
                 <div class="frequent-chips-container" id="frequentChips"></div>
             </div>
 
+            <!-- TABELLA PRODOTTI -->
             <div id="shoppingListContainer"></div>
 
+            <!-- DASHBOARD BUDGET -->
             <div class="budget-dashboard" id="budgetDashboard">
                 <div class="budget-row">
                     <span>Totale stimato lista:</span>
@@ -359,12 +385,15 @@
             </div>
         </div>
 
+        <!-- VISTA DISPENSA (SCHEDA 2) -->
         <div id="viewPantry" class="app-view">
+            <!-- FILTRI DISPENSA -->
             <div class="pantry-filters">
                 <div id="filterPantryAll" class="filter-chip active" onclick="setPantryFilter('all')">Tutta la Dispensa</div>
                 <div id="filterPantryMissing" class="filter-chip" onclick="setPantryFilter('missing')">🔴 Cose Finite</div>
             </div>
 
+            <!-- AGGIUNGI IN DISPENSA -->
             <div class="glass-panel">
                 <div class="section-title">Aggiungi Elemento in Dispensa</div>
                 <div class="input-group" style="margin-bottom: 0;">
@@ -375,9 +404,11 @@
                 </div>
             </div>
 
+            <!-- ELENCO ARTICOLI DISPENSA -->
             <div id="pantryListContainer"></div>
         </div>
 
+        <!-- BARRA DI NAVIGAZIONE INFERIORE -->
         <nav class="bottom-nav">
             <button id="navShopping" class="nav-item active" onclick="switchTab('shopping')">
                 <span class="nav-icon">🛒</span>
@@ -390,6 +421,7 @@
         </nav>
     </div>
 
+    <!-- SCRIPT FIREBASE COMPAT -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -407,64 +439,13 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const firestoreDB = firebase.firestore();
-        const docRef = firestoreDB.collection("appData").doc("shoppingState");
-
+        
+        let docRef = null; 
         let databaseListener = null;
         let chartCategoryInstance = null;
         let chartMonthlyInstance = null;
         let currentPantryFilter = 'all';
-
-        // ACCESSO E AGGANCIO UTENTE (MIGLIORATO PER EVITARE BLOCCHI SILENZIOSI)
-        auth.onAuthStateChanged((user) => {
-            const loginOverlay = document.getElementById('loginOverlay');
-            const appContainer = document.getElementById('appContainer');
-            const loginBtn = document.getElementById('loginBtnElement');
-
-            if (user) {
-                loginOverlay.style.display = 'none';
-                appContainer.style.display = 'block';
-                if (loginBtn) loginBtn.disabled = false;
-                startRealtimeSync();
-            } else {
-                loginOverlay.style.display = 'flex';
-                appContainer.style.display = 'none';
-                if (loginBtn) loginBtn.disabled = false;
-                if (databaseListener) { databaseListener(); databaseListener = null; }
-            }
-        });
-
-        function handleLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const errorDiv = document.getElementById('loginError');
-            const loginBtn = document.getElementById('loginBtnElement');
-            
-            errorDiv.style.display = 'none';
-
-            if (!email || !password) {
-                errorDiv.innerText = "Inserisci sia l'email che la password.";
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            // Evita doppi click bloccando momentaneamente il tasto
-            loginBtn.disabled = true;
-
-            auth.signInWithEmailAndPassword(email, password)
-                .catch((error) => {
-                    loginBtn.disabled = false;
-                    errorDiv.style.display = 'block';
-                    if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                        errorDiv.innerText = "❌ Email o password errata.";
-                    } else {
-                        errorDiv.innerText = "⚠️ Errore Cloud: " + error.message;
-                    }
-                });
-        }
-
-        function handleLogout() {
-            if(confirm("Vuoi uscire dall'applicazione?")) { auth.signOut(); }
-        }
+        let currentUserFamilyId = null;
 
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
@@ -478,26 +459,142 @@
             { name: "Petto di Pollo", cat: "Carne e Pesce 🥩", price: 6.50 }, { name: "Latte", cat: "Latticini e Frigo 🧀", price: 1.39 }, { name: "Acqua Naturale", cat: "Bevande 💧", price: 0.35 }, { name: "Carta Igienica", cat: "Igiene e Casa 🧻", price: 3.50 }
         ];
 
-        let localState = {
-            currentMarket: "Supermercato Standard",
-            markets: {
-                "Supermercato Standard": { categories: [...defaultCategories], items: [], history: {} }
-            },
-            storico_spese: [],
-            dispensa: []
-        };
+        let localState = {};
 
+        // SINCRO AUTENTICAZIONE E CONTROL PROFILE FAMIGLIA
+        auth.onAuthStateChanged((user) => {
+            const loginOverlay = document.getElementById('loginOverlay');
+            const appContainer = document.getElementById('appContainer');
+            const authFields = document.getElementById('authFields');
+            const familySetupFields = document.getElementById('familySetupFields');
+            const errorDiv = document.getElementById('loginError');
+
+            if (user) {
+                errorDiv.style.display = 'none';
+                firestoreDB.collection("users").doc(user.uid).get()
+                    .then((userDoc) => {
+                        if (userDoc.exists && userDoc.data().familyId) {
+                            currentUserFamilyId = userDoc.data().familyId;
+                            document.getElementById('familyBadge').innerText = `CODICE FAMIGLIA: ${currentUserFamilyId}`;
+                            loginOverlay.style.display = 'none';
+                            appContainer.style.display = 'block';
+                            authFields.style.display = 'block';
+                            familySetupFields.style.display = 'none';
+                            
+                            docRef = firestoreDB.collection("familiesData").doc(currentUserFamilyId);
+                            startRealtimeSync();
+                        } else {
+                            loginOverlay.style.display = 'flex';
+                            appContainer.style.display = 'none';
+                            authFields.style.display = 'none';
+                            familySetupFields.style.display = 'block';
+                        }
+                    })
+                    .catch((err) => {
+                        errorDiv.innerText = "⚠️ Errore caricamento profilo: " + err.message;
+                        errorDiv.style.display = 'block';
+                    });
+            } else {
+                loginOverlay.style.display = 'flex';
+                appContainer.style.display = 'none';
+                authFields.style.display = 'block';
+                familySetupFields.style.display = 'none';
+                if (databaseListener) { databaseListener(); databaseListener = null; }
+            }
+        });
+
+        // FUNZIONE ACCESSO / REGISTRAZIONE AUTOMATICA
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtnElement');
+            
+            errorDiv.style.display = 'none';
+            if (!email || !password) { errorDiv.innerText = "Inserisci email e password."; errorDiv.style.display = 'block'; return; }
+            loginBtn.disabled = true;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                        auth.createUserWithEmailAndPassword(email, password)
+                            .then((cred) => {
+                                firestoreDB.collection("users").doc(cred.user.uid).set({ email: email, familyId: null });
+                            })
+                            .catch((regError) => {
+                                loginBtn.disabled = false;
+                                errorDiv.style.display = 'block';
+                                errorDiv.innerText = "❌ Errore Registrazione: " + regError.message;
+                            });
+                    } else {
+                        loginBtn.disabled = false;
+                        errorDiv.style.display = 'block';
+                        errorDiv.innerText = "❌ Password errata o account bloccato.";
+                    }
+                });
+        }
+
+        // GENERAZIONE DI UN NUOVO CODICE FAMIGLIA NUOVA
+        function createNewFamily() {
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            const newFamilyId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const initialFamilyState = {
+                currentMarket: "Supermercato Standard",
+                markets: {
+                    "Supermercato Standard": { categories: [...defaultCategories], items: [], history: {} }
+                },
+                storico_spese: [],
+                dispensa: []
+            };
+
+            firestoreDB.collection("familiesData").doc(newFamilyId).set(initialFamilyState)
+                .then(() => {
+                    return firestoreDB.collection("users").doc(user.uid).update({ familyId: newFamilyId });
+                })
+                .then(() => {
+                    window.location.reload();
+                });
+        }
+
+        // AGGANCIO A FAMIGLIA ESISTENTE TRAMITE CODICE
+        function joinFamily() {
+            const user = auth.currentUser;
+            const code = document.getElementById('familyCodeInput').value.trim().toUpperCase();
+            const errorDiv = document.getElementById('loginError');
+
+            if (!code) { alert("Inserisci un codice valido."); return; }
+
+            firestoreDB.collection("familiesData").doc(code).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        return firestoreDB.collection("users").doc(user.uid).update({ familyId: code });
+                    } else {
+                        throw new Error("Il codice famiglia inserito non esiste. Riprova.");
+                    }
+                })
+                .then(() => {
+                    window.location.reload();
+                })
+                .catch((err) => {
+                    errorDiv.innerText = "⚠️ " + err.message;
+                    errorDiv.style.display = 'block';
+                });
+        }
+
+        function handleLogout() { if(confirm("Vuoi uscire?")) { auth.signOut(); } }
+
+        // REALTIME STREAMING
         function startRealtimeSync() {
-            // Se esiste già un listener attivo, lo puliamo prima di ricrearlo
             if (databaseListener) databaseListener();
+            if (!docRef) return;
 
             databaseListener = docRef.onSnapshot((doc) => {
                 if (doc.exists) {
                     localState = doc.data();
                     if (!localState.storico_spese) localState.storico_spese = [];
                     if (!localState.dispensa) localState.dispensa = [];
-                } else {
-                    docRef.set(localState);
                 }
                 updateMarketSelectorUI();
                 updateCategoryUI();
@@ -506,19 +603,11 @@
                 renderFrequentChips();
                 if(document.getElementById('statsPanel').classList.contains('open')) { buildCharts(); }
             }, (error) => {
-                // SE IL DATABASE DA ERRORE (ES: REGOLE DI SICUREZZA DI FIREBASE BLOCCATE) LO COMBATTIAMO A SCHERMO
-                console.error("Errore Realtime Cloud:", error);
-                const errorDiv = document.getElementById('loginError');
-                const loginOverlay = document.getElementById('loginOverlay');
-                const appContainer = document.getElementById('appContainer');
-                
-                auth.signOut(); // Scolleghiamo forzatamente l'utente per rimetterlo in login
-                loginOverlay.style.display = 'flex';
-                appContainer.style.display = 'none';
-                errorDiv.style.display = 'block';
-                errorDiv.innerText = "⚠️ Errore Database: Permessi di scrittura/lettura Cloud negati. Controlla le regole (Rules) su Firebase Console.";
+                console.error("Errore Realtime:", error);
             });
         }
+
+        function pushToCloud() { if(auth.currentUser && docRef) docRef.set(localState); }
 
         function switchTab(tab) {
             triggerHapticFeedback();
@@ -646,7 +735,6 @@
 
         function triggerHapticFeedback() { if (navigator.vibrate) navigator.vibrate(15); }
         function getActiveMarket() { if(!localState.markets[localState.currentMarket].history) localState.markets[localState.currentMarket].history = {}; return localState.markets[localState.currentMarket]; }
-        function pushToCloud() { if(auth.currentUser) docRef.set(localState); }
 
         function findEstimatedPriceGlobal(productName) {
             let latestPriceFound = 0;
@@ -721,6 +809,7 @@
 
         function updateMarketSelectorUI() {
             const select = document.getElementById('marketSelect'); select.innerHTML = '';
+            if(!localState.markets) return;
             Object.keys(localState.markets).forEach(mName => {
                 const opt = document.createElement('option'); opt.value = mName; opt.innerText = mName;
                 if(mName === localState.currentMarket) opt.selected = true;
@@ -753,6 +842,8 @@
             const select = document.getElementById('categoryInput');
             const pantrySelect = document.getElementById('pantryCategoryInput');
             const catListElement = document.getElementById('customCatList');
+            if(!localState.markets || !getActiveMarket()) return;
+            
             const currentCatList = getActiveMarket().categories;
             const currentItems = getActiveMarket().items || [];
             
@@ -795,6 +886,7 @@
 
         function renderList() {
             const container = document.getElementById('shoppingListContainer'); container.innerHTML = '';
+            if(!localState.markets) return;
             const activeMarket = getActiveMarket();
             let estTotal = 0, cartTotal = 0;
             let totalItems = activeMarket.items.length;
@@ -875,6 +967,7 @@
             const container = document.getElementById('pantryListContainer'); if(!container) return;
             container.innerHTML = '';
             const pantryItems = localState.dispensa || [];
+            if(!localState.markets) return;
             const activeMarket = getActiveMarket();
 
             activeMarket.categories.forEach(reparto => {
@@ -919,12 +1012,7 @@
                     alert("Questo prodotto esiste già in dispensa!"); return;
                 }
 
-                localState.dispensa.push({
-                    nome: nome,
-                    categoria: catSel.value,
-                    stato: 'disponibile'
-                });
-
+                localState.dispensa.push({ nome: nome, categoria: catSel.value, stato: 'disponibile' });
                 input.value = ''; pushToCloud();
             }
         }
@@ -960,6 +1048,7 @@
             }
         }
 
+        // FUNZIONE AGGIORNATA CON SPOSTAMENTO CARRELLO -> DISPENSA AUTOMATICO
         function clearCompleted() {
             triggerHapticFeedback();
             const activeMarket = getActiveMarket();
@@ -975,7 +1064,6 @@
             if (!localState.dispensa) { localState.dispensa = []; }
 
             itemsComprati.forEach(item => {
-                // 1. Salva nello storico spese per i grafici
                 localState.storico_spese.push({
                     nome: item.name,
                     prezzo: parseFloat(item.price) || 0,
@@ -986,14 +1074,10 @@
                     data: dataCompleta
                 });
 
-                // 2. Gestione Dispensa Automatica
                 const dispensaIdx = localState.dispensa.findIndex(p => p.nome.toLowerCase() === item.name.toLowerCase());
-                
                 if (dispensaIdx !== -1) {
-                    // Se il prodotto esiste già in dispensa, lo rimette semplicemente come "disponibile"
                     localState.dispensa[dispensaIdx].stato = 'disponibile';
                 } else {
-                    // SE IL PRODOTTO NON ESISTE, LO CREA AUTOMATICAMENTE!
                     localState.dispensa.push({
                         nome: item.name,
                         categoria: item.category || "Generale",
@@ -1002,7 +1086,6 @@
                 }
             });
 
-            // Rimuove gli articoli completati dal carrello
             activeMarket.items = activeMarket.items.filter(item => !item.completed);
             pushToCloud();
         }
