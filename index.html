@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B0E14">
     
+    <!-- Libreria Chart.js per i grafici -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -246,6 +247,7 @@
 </head>
 <body>
 
+    <!-- OVERLAY DI ACCESSO CONDIVISO -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
             <div class="login-title">SpesaPro 🛒</div>
@@ -267,11 +269,13 @@
         </div>
     </div>
 
+    <!-- CONTENITORE APPLICAZIONE -->
     <div class="container" id="appContainer">
         <h1>SpesaPro 🛒</h1>
         <div id="familyBadge" style="text-align: center; font-size: 11px; color: var(--neon-purple); margin-top: -15px; margin-bottom: 20px; font-weight: bold; letter-spacing: 1px;"></div>
         <button class="logout-header-btn" onclick="handleLogout()">Esci 🚪</button>
         
+        <!-- VISTA SPESA (SCHEDA 1) -->
         <div id="viewShopping" class="app-view active">
             <div class="progress-container" id="progressZone">
                 <div class="progress-bar-bg">
@@ -280,6 +284,7 @@
                 <div class="progress-text" id="progressLabel">0 / 0 prodotti nel carrello (0%)</div>
             </div>
             
+            <!-- SEZIONE REPORT STASTISTICHE -->
             <div class="stats-wrapper">
                 <button class="stats-toggle-btn" onclick="toggleStatsPanel()">
                     <span>📊</span> <span id="statsBtnText">Mostra Statistiche Spese</span>
@@ -300,6 +305,7 @@
                 </div>
             </div>
             
+            <!-- SEZIONE NEGOZIO COMPATTA -->
             <div class="glass-panel" style="padding: 14px 20px;">
                 <div class="config-manager-title" onclick="toggleConfigManager()">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -309,6 +315,7 @@
                     <span id="panelsign" style="color: var(--text-muted); font-size: 12px;">Impostazioni ⚙️</span>
                 </div>
 
+                <!-- PANNELLO AVANZATO NASCOSTO (Aggiunta negozi / Gestione Corsie) -->
                 <div class="config-manager-content" id="configContent">
                     <div class="section-title">Nuovo Negozio</div>
                     <div class="input-group">
@@ -329,6 +336,7 @@
                 </div>
             </div>
 
+            <!-- INPUT PRODOTTO -->
             <div class="glass-panel">
                 <div class="section-title">Aggiungi Prodotto in Lista</div>
                 <div class="input-group">
@@ -344,13 +352,16 @@
                 </div>
             </div>
 
+            <!-- PIÙ COMPRATI -->
             <div class="frequent-products-zone" id="frequentZone" style="display: none; margin: 0 6px 16px 6px;">
                 <div class="section-title" style="color: #9D4EDD;">⭐ Comprati Spesso:</div>
                 <div class="frequent-chips-container" id="frequentChips"></div>
             </div>
 
+            <!-- TABELLA PRODOTTI -->
             <div id="shoppingListContainer"></div>
 
+            <!-- DASHBOARD BUDGET -->
             <div class="budget-dashboard" id="budgetDashboard">
                 <div class="budget-row">
                     <span>Totale stimato lista:</span>
@@ -368,6 +379,7 @@
             </div>
         </div>
 
+        <!-- VISTA DISPENSA (SCHEDA 2) -->
         <div id="viewPantry" class="app-view">
             <div class="pantry-filters">
                 <div id="filterPantryAll" class="filter-chip active" onclick="setPantryFilter('all')">Tutta la Dispensa</div>
@@ -387,6 +399,7 @@
             <div id="pantryListContainer"></div>
         </div>
 
+        <!-- BARRA DI NAVIGAZIONE INFERIORE -->
         <nav class="bottom-nav">
             <button id="navShopping" class="nav-item active" onclick="switchTab('shopping')">
                 <span class="nav-icon">🛒</span>
@@ -399,6 +412,7 @@
         </nav>
     </div>
 
+    <!-- SCRIPT FIREBASE COMPAT -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -424,10 +438,11 @@
         let currentPantryFilter = 'all';
         let currentUserFamilyId = null;
 
+        // "Flaminia 🎀" rimossa dall'array di default
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
             "Carne e Pesce 🥩", "Latticini e Frigo 🧀", "Bevande 💧", 
-            "Igiene e Casa 🧻", "Surgelati 🧊", "Flaminia 🎀"
+            "Igiene e Casa 🧻", "Surgelati 🧊"
         ];
 
         const smartDictionary = [
