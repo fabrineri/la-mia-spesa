@@ -740,7 +740,7 @@
             if (index !== -1) { activeItems.splice(index, 1); pushToCloud(); }
         }
 
-        async function clearCompleted() {
+async function clearCompleted() {
     triggerHapticFeedback();
     const activeMarket = getActiveMarket();
     
@@ -748,43 +748,46 @@
     const itemsComprati = activeMarket.items.filter(item => item.completed);
     
     if (itemsComprati.length === 0) {
-        alert("Non ci sono prodotti spuntati nel carrello da salvare!");
+        alert("Non ci sono prodotti spuntati nel carrello!");
         return;
     }
 
-    // Preparazione delle date per le statistiche (Anno-Mese per i grafici)
+    // Preparazione delle date per le statistiche
     const oggi = new Date();
     const meseCorrente = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
     const dataCompleta = oggi.toISOString().split('T')[0];
 
-    // 2. Salva ogni prodotto spuntato nello storico su Firebase usando 'db'
-    const batchPromises = itemsComprati.map(item => {
-        return db.collection("storico_spese").add({
-            nome: item.name,
-            prezzo: parseFloat(item.price) || 0,
-            quantita: parseInt(item.qty) || 1,
-            categoria: item.category || "Generale",
-            mercato: localState.currentMarket,
-            mese: meseCorrente,
-            data: dataCompleta
-        });
-    });
-
     try {
-        // Aspetta che Firebase abbia salvato tutto lo storico
-        await Promise.all(batchPromises);
-        console.log("Prodotti salvati nello storico con successo!");
+        // Usa il riferimento nativo e sicuro di Firebase configurato nella tua app
+        const firestoreInstance = firebase.firestore();
 
-        // 3. Ora cancella i prodotti completati dalla lista principale
-        activeMarket.items = activeMarket.items.filter(item => !item.completed);
-        
-        // Sincronizza il nuovo stato leggero sul Cloud
-        pushToCloud();
-        
+        // 2. Salva ogni prodotto spuntato nello storico su Firebase
+        const batchPromises = itemsComprati.map(item => {
+            return firestoreInstance.collection("storico_spese").add({
+                nome: item.name,
+                prezzo: parseFloat(item.price) || 0,
+                quantita: parseInt(item.qty) || 1,
+                categoria: item.category || "Generale",
+                mercato: localState.currentMarket,
+                mese: meseCorrente,
+                data: dataCompleta
+            });
+        });
+
+        // Aspetta il salvataggio dello storico
+        await Promise.all(batchPromises);
+        console.log("Prodotti archiviati con successo!");
+
     } catch (error) {
-        console.error("Errore durante il salvataggio dello storico:", error);
-        alert("Ops! C'è stato un errore nel salvare lo storico su Firebase.");
+        // Se Firebase fallisce, lo logghiamo ma lasciamo comunque svuotare il carrello locale
+        console.error("Errore Firebase storico (ma procedo con la pulizia):", error);
     }
+
+    // 3. Rimuovi i prodotti completati dalla schermata (questo DEVE funzionare sempre)
+    activeMarket.items = activeMarket.items.filter(item => !item.completed);
+    
+    // Sincronizza il nuovo stato sul Cloud
+    pushToCloud();
 }
         function resetAllList() {
             if (confirm(`Vuoi azzerare la lista?`)) { getActiveMarket().items = []; pushToCloud(); }
