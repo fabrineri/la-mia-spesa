@@ -6,35 +6,9 @@
     <title>SuperSpesa Pro Cloud 🛒</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B0E14">
-    <!-- Sezione Statistiche e Storico Spese -->
-<div class="stats-container-wrapper">
-    <button id="toggleStatsBtn" onclick="toggleStatsPanel()" class="btn-stats-toggle">
-        📊 Mostra Statistiche Spese
-    </button>
-
-    <div id="statsPanel" class="stats-panel hidden">
-        <h3 class="stats-title">Resoconto Spese</h3>
-        
-        <!-- Totale Mensile in grande -->
-        <div class="total-box">
-            <span class="total-label">Totale Mese Corrente:</span>
-            <span id="currentMonthTotal" class="total-amount">0.00 €</span>
-        </div>
-
-        <hr class="stats-divider">
-
-        <!-- Contenitori dei Grafici -->
-        <div class="chart-container">
-            <h4>Distribuzione per Categoria</h4>
-            <canvas id="categoryChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h4>Andamento Mensile</h4>
-            <canvas id="monthlyChart"></canvas>
-        </div>
-    </div>
-</div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #0F1319 0%, #080A0F 100%);
@@ -154,7 +128,7 @@
             margin-top: -36px;
         }
 
-        /* RESTART VECCHIO STILE */
+        /* STILI GENERALI */
         h1 { text-align: center; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-top: 10px; margin-bottom: 6px; background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .progress-container { margin-bottom: 24px; text-align: center; display: none; }
         .progress-bar-bg { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; height: 10px; width: 100%; overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
@@ -162,22 +136,40 @@
         .progress-text { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-weight: 500; letter-spacing: 0.5px; }
         .glass-panel { background: var(--panel-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--panel-border); border-radius: 24px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
         .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; color: var(--neon-blue); margin-bottom: 10px; }
+        
+        /* INCOLLONAMENTO SEZIONE STATISTICHE */
+        .stats-wrapper { margin-bottom: 16px; width: 100%; box-sizing: border-box; }
+        .stats-toggle-btn { width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-muted); border-radius: 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-align: center; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .stats-toggle-btn:hover { background: rgba(255, 255, 255, 0.06); color: white; border-color: var(--neon-blue); }
+        .stats-panel-content { display: none; margin-top: 12px; padding: 20px; background: rgba(13, 17, 26, 0.95); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 20px; box-sizing: border-box; }
+        .stats-panel-content.open { display: block; }
+        .stats-row-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .stats-total-title { font-size: 14px; color: var(--text-muted); }
+        .stats-total-value { font-size: 22px; font-weight: 800; color: var(--neon-green); text-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        .chart-box { margin-bottom: 24px; position: relative; width: 100%; }
+        .chart-box h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--neon-purple); margin: 0 0 12px 0; font-weight: 700; }
+
+        /* INPUT GROUPS */
         .input-group { display: flex; gap: 10px; margin-bottom: 12px; position: relative; }
-        input[type="text"], input[type="number"], select { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 14px; font-size: 16px; color: white; outline: none; box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        input[type="text"], input[type="number"], select { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 14px; font-size: 16px; color: white; outline: none; box-sizing: border-box; transition: all 0.3s ease; }
         input:focus, select:focus { border-color: var(--neon-blue); background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 15px rgba(0, 229, 255, 0.2); }
         #itemInput { flex: 2; min-width: 120px; }
         #categoryInput { flex: 1.3; min-width: 110px; background-color: #161C26; }
         #qtyInput { width: 75px; text-align: center; }
         #priceInput { width: 95px; }
+        
         .voice-btn { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; width: 52px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
         .voice-btn.listening { border-color: var(--neon-red); background: rgba(255, 49, 49, 0.15); box-shadow: 0 0 15px rgba(255, 49, 49, 0.4); animation: pulse-border 1.5s infinite; }
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(255, 49, 49, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 49, 49, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 49, 49, 0); } }
+        
         button.add-btn { background: linear-gradient(135deg, var(--neon-blue), #00A3FF); color: #000; font-weight: bold; border: none; border-radius: 14px; padding: 14px; font-size: 16px; cursor: pointer; transition: transform 0.1s, opacity 0.2s; width: 52px; font-size: 22px; display: flex; align-items: center; justify-content: center; }
         button.add-btn:active { transform: scale(0.95); opacity: 0.9; }
+        
         .autocomplete-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: #121824; border: 1px solid var(--neon-blue); border-radius: 16px; z-index: 99999; max-height: 240px; overflow-y: auto; display: none; }
         .suggestion-item { padding: 15px 16px; cursor: pointer; font-size: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; }
         .frequent-chips-container { display: flex; gap: 8px; flex-wrap: wrap; }
         .frequent-chip { background: rgba(157, 78, 221, 0.12); color: #D6A4FF; border: 1px solid rgba(157, 78, 221, 0.2); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
+        
         .category-manager-title { font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .category-manager-content { display: none; margin-top: 14px; }
         .category-manager-content.open { display: block; }
@@ -188,10 +180,12 @@
         .cat-actions { display: flex; gap: 14px; align-items: center; }
         .move-btn { background: none; border: none; color: var(--neon-blue); cursor: pointer; }
         .move-btn:disabled { color: #3A4454; }
+        
         .category-header { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--neon-blue); margin: 24px 0 8px 6px; }
         .product-list { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 4px 14px; margin-bottom: 12px; list-style: none; }
         li.product-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
         li.product-item:last-child { border-bottom: none; }
+        
         .item-text { flex: 1; font-size: 16px; margin-left: 14px; cursor: pointer; }
         .item-details { font-size: 13px; color: var(--text-muted); margin-right: 12px; }
         .check-btn { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%; width: 26px; height: 26px; cursor: pointer; }
@@ -199,105 +193,21 @@
         .completed .check-btn::after { content: "✓"; color: #000; font-size: 15px; font-weight: 900; display: block; text-align: center; line-height: 22px; }
         .completed .item-text { text-decoration: line-through; color: var(--text-muted); }
         .delete-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; }
+        
         .budget-dashboard { background: linear-gradient(135deg, rgba(22, 28, 38, 0.95), rgba(12, 16, 24, 0.95)); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; padding: 16px; margin-top: 24px; display: none; }
         .budget-row { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 8px; color: var(--text-muted); }
         .budget-row.total-highlight { font-size: 18px; font-weight: 700; color: white; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; margin-top: 10px; }
         .success-text { color: var(--neon-green); }
+        
         .action-buttons-container { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
         .clear-btn { flex: 1; border: 1px solid transparent; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
         #clearCompletedBtn { background: rgba(0, 229, 255, 0.08); border-color: rgba(0, 229, 255, 0.2); color: var(--neon-blue); }
         #resetAllBtn { background: rgba(255, 49, 49, 0.08); border-color: rgba(255, 49, 49, 0.2); color: var(--neon-red); }
         .delete-cat-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; width: 52px; color: var(--text-muted); cursor: pointer; }
-    .stats-container-wrapper {
-    margin: 15px auto;
-    width: 90%;
-    max-width: 500px;
-}
-
-.btn-stats-toggle {
-    width: 100%;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    border-radius: 12px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-}
-
-.btn-stats-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
-}
-
-.stats-panel {
-    margin-top: 15px;
-    padding: 20px;
-    background: rgba(15, 22, 36, 0.85);
-    border: 1px solid rgba(0, 242, 254, 0.3);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    backdrop-filter: blur(8px);
-}
-
-.stats-panel.hidden {
-    display: none;
-}
-
-.stats-title {
-    color: #00f2fe;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 18px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.total-box {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-}
-
-.total-label {
-    color: #aaa;
-    font-size: 14px;
-}
-
-.total-amount {
-    color: #4facfe;
-    font-size: 22px;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
-}
-
-.stats-divider {
-    border: 0;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 15px 0;
-}
-
-.chart-container {
-    margin-top: 20px;
-}
-
-.chart-container h4 {
-    color: #fff;
-    font-size: 14px;
-    margin-bottom: 10px;
-    font-weight: 500;
-}
     </style>
-    <!-- Libreria Chart.js per i grafici delle spese -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <!-- OVERLAY DI ACCESSO -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
             <div class="login-title">SuperSpesa Cloud 🔒</div>
@@ -308,7 +218,6 @@
         </div>
     </div>
 
-    <!-- CONTENITORE APPLICAZIONE -->
     <div class="container" id="appContainer">
         <h1>SuperSpesa Pro Cloud 🛒</h1>
         <button class="logout-header-btn" onclick="handleLogout()">Esci 🚪</button>
@@ -320,7 +229,26 @@
             <div class="progress-text" id="progressLabel">0 / 0 prodotti nel carrello (0%)</div>
         </div>
         
-        <!-- SELEZIONE SUPERMERCATO -->
+        <div class="stats-wrapper">
+            <button class="stats-toggle-btn" onclick="toggleStatsPanel()">
+                <span>📊</span> <span id="statsBtnText">Mostra Statistiche Spese</span>
+            </button>
+            <div id="statsPanel" class="stats-panel-content">
+                <div class="stats-row-total">
+                    <span class="stats-total-title">Totale Mese Corrente:</span>
+                    <span id="currentMonthTotal" class="stats-total-value">0.00 €</span>
+                </div>
+                <div class="chart-box">
+                    <h4>Distribuzione per Reparto</h4>
+                    <canvas id="categoryChart" style="max-height: 230px;"></canvas>
+                </div>
+                <div class="chart-box" style="margin-bottom: 0;">
+                    <h4>Andamento Mensile</h4>
+                    <canvas id="monthlyChart" style="max-height: 180px;"></canvas>
+                </div>
+            </div>
+        </div>
+        
         <div class="glass-panel">
             <div class="section-title">Supermercato Corrente</div>
             <div class="input-group" style="margin-bottom: 0;">
@@ -335,7 +263,6 @@
             </div>
         </div>
         
-        <!-- GESTIONE CORSIE -->
         <div class="glass-panel" style="padding: 16px 20px;">
             <div class="category-manager-title" onclick="toggleCatManager()">
                 <span style="color: #9D4EDD; font-weight: 700;">⚙️ Configura Ordine Corsie</span>
@@ -350,7 +277,6 @@
             </div>
         </div>
 
-        <!-- INPUT PRODOTTO -->
         <div class="glass-panel">
             <div class="section-title">Aggiungi Prodotto</div>
             <div class="input-group">
@@ -366,7 +292,6 @@
             </div>
         </div>
 
-        <!-- PIÙ COMPRATI -->
         <div class="frequent-products-zone" id="frequentZone" style="display: none; margin: 0 6px 16px 6px;">
             <div class="section-title" style="color: #9D4EDD;">⭐ Comprati Spesso:</div>
             <div class="frequent-chips-container" id="frequentChips"></div>
@@ -374,7 +299,6 @@
 
         <div id="shoppingListContainer"></div>
 
-        <!-- DASHBOARD BUDGET -->
         <div class="budget-dashboard" id="budgetDashboard">
             <div class="budget-row">
                 <span>Totale stimato lista:</span>
@@ -392,7 +316,6 @@
         </div>
     </div>
 
-    <!-- SCRIPT FIREBASE COMPAT (INCLUSO IL MODULO AUTH) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -413,31 +336,29 @@
         const docRef = firestoreDB.collection("appData").doc("shoppingState");
 
         let databaseListener = null;
+        let chartCategoryInstance = null;
+        let chartMonthlyInstance = null;
 
-        // GESTIONE DELLO STATO DELL'AUTENTICAZIONE DI GOOGLE
+        // GESTIONE DELLO STATO DELL'AUTENTICAZIONE
         auth.onAuthStateChanged((user) => {
             const loginOverlay = document.getElementById('loginOverlay');
             const appContainer = document.getElementById('appContainer');
 
             if (user) {
-                // Utente Loggato: Mostra l'app e avvia la sincronizzazione in tempo reale
                 loginOverlay.style.display = 'none';
                 appContainer.style.display = 'block';
                 startRealtimeSync();
             } else {
-                // Utente Scollegato: Mostra la schermata di login
                 loginOverlay.style.display = 'flex';
                 appContainer.style.display = 'none';
                 if (databaseListener) { databaseListener(); databaseListener = null; }
             }
         });
 
-        // LOGICA DI LOGIN CON CONTROLLO DEGLI ERRORI
         function handleLogin() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             const errorDiv = document.getElementById('loginError');
-            
             errorDiv.style.display = 'none';
 
             if (!email || !password) {
@@ -449,13 +370,8 @@
             auth.signInWithEmailAndPassword(email, password)
                 .catch((error) => {
                     errorDiv.style.display = 'block';
-                    console.error(error);
                     if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
                         errorDiv.innerText = "❌ Email o password errata. Controlla le maiuscole o spazi extra finali.";
-                    } else if (error.code === 'auth/invalid-email') {
-                        errorDiv.innerText = "❌ Formato email non valido.";
-                    } else if (error.code === 'auth/operation-not-allowed') {
-                        errorDiv.innerText = "❌ Il login con Email/Password non è abilitato nella console di Firebase.";
                     } else {
                         errorDiv.innerText = "⚠️ Errore Cloud: " + error.message;
                     }
@@ -469,33 +385,31 @@
         // DATI DI DEFAULT
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
-            "Carne e Pesce 🥩", "Latticini e Frigo ➔ 🧀", "Bevande 💧", 
+            "Carne e Pesce 🥩", "Latticini e Frigo 🧀", "Bevande 💧", 
             "Igiene e Casa 🧻", "Surgelati 🧊", "Flaminia 🎀"
         ];
 
         const smartDictionary = [
             { name: "Mele", cat: "Ortofrutta 🍎", price: 1.99 }, { name: "Banane", cat: "Ortofrutta 🍎", price: 1.49 }, { name: "Insalata", cat: "Ortofrutta 🍎", price: 1.19 }, { name: "Pomodori", cat: "Ortofrutta 🍎", price: 2.49 },
             { name: "Pane", cat: "Pane e Forno 🥖", price: 1.20 }, { name: "Biscotti", cat: "Pane e Forno 🥖", price: 2.80 }, { name: "Crackers", cat: "Pane e Forno 🥖", price: 1.40 }, { name: "Cornetti", cat: "Pane e Forno 🥖", price: 2.50 },
-            { name: "Pasta", cat: "Dispensa 🍝", price: 0.85 }, { name: "Riso", cat: "Dispensa 🍝", price: 1.99 }, { name: "Passata di pomodoro", cat: "Dispensa 🍝", price: 0.99 }, { name: "Olio d'oliva", cat: "Dispensa 🍝", price: 7.49 }, { name: "Zucchero", cat: "Dispensa 🍝", price: 1.25 }, { name: "Caffè", cat: "Dispensa 🍝", price: 3.20 },
-            { name: "Petto di Pollo", cat: "Carne e Pesce 🥩", price: 6.50 }, { name: "Macinato", cat: "Carne e Pesce 🥩", price: 5.90 }, { name: "Salmone", cat: "Carne e Pesce 🥩", price: 8.90 }, { name: "Prosciutto", cat: "Carne e Pesce 🥩", price: 2.99 },
-            { name: "Latte", cat: "Latticini e Frigo 🧀", price: 1.39 }, { name: "Mozzarella", cat: "Latticini e Frigo 🧀", price: 1.10 }, { name: "Yogurt", cat: "Latticini e Frigo 🧀", price: 0.99 }, { name: "Burro", cat: "Latticini e Frigo 🧀", price: 2.20 }, { name: "Uova", cat: "Latticini e Frigo 🧀", price: 1.89 },
-            { name: "Acqua Naturale", cat: "Bevande 💧", price: 0.35 }, { name: "Acqua Frizzante", cat: "Bevande 💧", price: 0.35 }, { name: "Birra", cat: "Bevande 💧", price: 1.50 }, { name: "Vino", cat: "Bevande 💧", price: 4.50 }, { name: "Succo di frutta", cat: "Bevande 💧", price: 1.69 },
-            { name: "Carta Igienica", cat: "Igiene e Casa 🧻", price: 3.50 }, { name: "Scottex", cat: "Igiene e Casa 🧻", price: 2.40 }, { name: "Sapone Piatti", cat: "Igiene e Casa 🧻", price: 1.80 }, { name: "Dentifricio", cat: "Igiene e Casa 🧻", price: 2.10 }, { name: "Sacco Spazzatura", cat: "Igiene e Casa 🧻", price: 1.50 },
-            { name: "Gelato", cat: "Surgelati 🧊", price: 3.99 }, { name: "Piselli surgelati", cat: "Surgelati 🧊", price: 1.79 }, { name: "Pizza surgelata", cat: "Surgelati 🧊", price: 2.99 }, { name: "Bastoncini di pesce", cat: "Surgelati 🧊", price: 3.49 }
+            { name: "Pasta", cat: "Dispensa 🍝", price: 0.85 }, { name: "Riso", cat: "Dispensa 🍝", price: 1.99 }, { name: "Passata di pomodoro", cat: "Dispensa 🍝", price: 0.99 }, { name: "Olio d'oliva", cat: "Dispensa 🍝", price: 7.49 },
+            { name: "Petto di Pollo", cat: "Carne e Pesce 🥩", price: 6.50 }, { name: "Macinato", cat: "Carne e Pesce 🥩", price: 5.90 }, { name: "Latte", cat: "Latticini e Frigo 🧀", price: 1.39 }, { name: "Mozzarella", cat: "Latticini e Frigo 🧀", price: 1.10 },
+            { name: "Acqua Naturale", cat: "Bevande 💧", price: 0.35 }, { name: "Birra", cat: "Bevande 💧", price: 1.50 }, { name: "Carta Igienica", cat: "Igiene e Casa 🧻", price: 3.50 }, { name: "Pizza surgelata", cat: "Surgelati 🧊", price: 2.99 }
         ];
 
         let localState = {
             currentMarket: "Supermercato Standard",
             markets: {
                 "Supermercato Standard": { categories: [...defaultCategories], items: [], history: {} }
-            }
+            },
+            storico_spese: []
         };
 
-        // AVVIA SINCRONIZZAZIONE SOLO AD UTENTE AUTENTICATO
         function startRealtimeSync() {
             databaseListener = docRef.onSnapshot((doc) => {
                 if (doc.exists) {
                     localState = doc.data();
+                    if (!localState.storico_spese) localState.storico_spese = [];
                 } else {
                     docRef.set(localState);
                 }
@@ -503,55 +417,145 @@
                 updateCategoryUI();
                 renderList();
                 renderFrequentChips();
+                if(document.getElementById('statsPanel').classList.contains('open')) { buildCharts(); }
             }, (error) => {
                 console.error("Errore Realtime Cloud:", error);
             });
         }
 
-        // WAKE LOCK SCHERMO ACCESO
+        // FUNZIONE PER CONTROLLARE APERTURA/CHIUSURA STATISTICHE
+        function toggleStatsPanel() {
+            const panel = document.getElementById('statsPanel');
+            const btnText = document.getElementById('statsBtnText');
+            panel.classList.toggle('open');
+            
+            if (panel.classList.contains('open')) {
+                btnText.innerText = "Nascondi Statistiche Spese";
+                buildCharts();
+            } else {
+                btnText.innerText = "Mostra Statistiche Spese";
+            }
+        }
+
+        // GENERATORE DEI GRAFICI CON CHART.JS
+        function buildCharts() {
+            const storico = localState.storico_spese || [];
+            const oggi = new Date();
+            const meseCorrenteStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
+
+            // Calcolo totale mese corrente
+            let totaleMese = 0;
+            const spesePerCategoria = {};
+            const spesePerMese = {};
+
+            storico.forEach(spesa => {
+                const spesaPrezzoCompleto = (spesa.prezzo || 0) * (spesa.quantita || 1);
+                
+                // Aggrega per mese corrente (per torta categorie)
+                if (spesa.mese === meseCorrenteStr) {
+                    totaleMese += spesaPrezzoCompleto;
+                    spesePerCategoria[spesa.categoria] = (spesePerCategoria[spesa.categoria] || 0) + spesaPrezzoCompleto;
+                }
+                // Aggrega per andamento mensile storico
+                if (spesa.mese) {
+                    spesePerMese[spesa.mese] = (spesePerMese[spesa.mese] || 0) + spesaPrezzoCompleto;
+                }
+            });
+
+            document.getElementById('currentMonthTotal').innerText = `${totaleMese.toFixed(2)} €`;
+
+            // 1. GRAFICO A TORTA (CATEGORIE)
+            const catLabels = Object.keys(spesePerCategoria);
+            const catData = Object.values(spesePerCategoria);
+
+            if (chartCategoryInstance) chartCategoryInstance.destroy();
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            chartCategoryInstance = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels,
+                    datasets: [{
+                        data: catData,
+                        backgroundColor: ['#00E5FF', '#9D4EDD', '#39FF14', '#FF3131', '#FF9F43', '#4EDD99', '#FFD200', '#FF6B6B', '#9F7AEA'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#8E9AA8', font: { size: 11 } } }
+                    }
+                }
+            });
+
+            // 2. GRAFICO A BARRE (STORICO MESI)
+            const mesiOrdinati = Object.keys(spesePerMese).sort().slice(-4); // Ultimi 4 mesi
+            const mesiData = mesiOrdinati.map(m => spesePerMese[m]);
+
+            if (chartMonthlyInstance) chartMonthlyInstance.destroy();
+            const ctxMesi = document.getElementById('monthlyChart').getContext('2d');
+            chartMonthlyInstance = new Chart(ctxMesi, {
+                type: 'bar',
+                data: {
+                    labels: mesiOrdinati,
+                    datasets: [{
+                        label: 'Spesa (€)',
+                        data: mesiData,
+                        backgroundColor: 'rgba(157, 78, 221, 0.4)',
+                        borderColor: '#9D4EDD',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#8E9AA8' } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8E9AA8' } }
+                    }
+                }
+            });
+        }
+
+        // WAKE LOCK E STRUTTURE BASE
         let wakeLock = null;
         async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); }
-            } catch (err) { console.log("Wake Lock disattivato"); }
+            try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {}
         }
         document.addEventListener('touchstart', requestWakeLock, { once: true });
         document.addEventListener('click', requestWakeLock, { once: true });
 
-        // RICONOSCIMENTO VOCALE
         function startVoiceRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) { alert("Dettatura vocale non supportata."); return; }
-            
+            if (!SpeechRecognition) { alert("Dettatura non supportata."); return; }
             const recognition = new SpeechRecognition();
             recognition.lang = 'it-IT';
-            
             const voiceBtn = document.getElementById('voiceBtn');
             voiceBtn.classList.add('listening');
             triggerHapticFeedback();
-
             recognition.start();
 
             recognition.onresult = (event) => {
-                const speechToText = event.results[0][0].transcript;
-                const formattedText = speechToText.charAt(0).toUpperCase() + speechToText.slice(1);
-                document.getElementById('itemInput').value = formattedText;
+                const text = event.results[0][0].transcript;
+                document.getElementById('itemInput').value = text.charAt(0).toUpperCase() + text.slice(1);
                 searchAutocomplete(); 
             };
-
-            recognition.onend = () => { voiceBtn.classList.remove('listening'); };
-            recognition.onerror = () => { voiceBtn.classList.remove('listening'); };
+            recognition.onend = () => voiceBtn.classList.remove('listening');
+            recognition.onerror = () => voiceBtn.classList.remove('listening');
         }
 
-        function triggerHapticFeedback() { if (navigator.vibrate) { navigator.vibrate(15); } }
-        function getActiveMarket() { if(!localState.markets[localState.currentMarket].history) { localState.markets[localState.currentMarket].history = {}; } return localState.markets[localState.currentMarket]; }
-        function pushToCloud() { if(auth.currentUser) { docRef.set(localState); } }
+        function triggerHapticFeedback() { if (navigator.vibrate) navigator.vibrate(15); }
+        function getActiveMarket() { if(!localState.markets[localState.currentMarket].history) localState.markets[localState.currentMarket].history = {}; return localState.markets[localState.currentMarket]; }
+        function pushToCloud() { if(auth.currentUser) docRef.set(localState); }
 
         function findEstimatedPriceGlobal(productName) {
             let latestPriceFound = 0;
             Object.keys(localState.markets).forEach(mName => {
                 const mHistory = localState.markets[mName].history || {};
-                if (mHistory[productName] && mHistory[productName].price > 0) { latestPriceFound = mHistory[productName].price; }
+                if (mHistory[productName] && mHistory[productName].price > 0) latestPriceFound = mHistory[productName].price;
             });
             if (latestPriceFound > 0) return latestPriceFound;
             const defaultMatch = smartDictionary.find(d => d.name.toLowerCase() === productName.toLowerCase());
@@ -559,9 +563,11 @@
         }
 
         const itemInput = document.getElementById('itemInput');
-        ['input', 'keydown', 'keyup', 'change'].forEach(evt => {
-            if(itemInput) { itemInput.addEventListener(evt, () => { searchAutocomplete(); }); }
-        });
+        if(itemInput) {
+            ['input', 'keydown', 'keyup', 'change'].forEach(evt => {
+                itemInput.addEventListener(evt, () => searchAutocomplete());
+            });
+        }
 
         function searchAutocomplete() {
             const input = document.getElementById('itemInput');
@@ -571,36 +577,15 @@
 
             if (!filter || filter.length < 1) { listContainer.style.display = 'none'; return; }
 
-            const globalHistoryNames = new Set();
-            Object.keys(localState.markets).forEach(mName => {
-                Object.keys(localState.markets[mName].history || {}).forEach(name => globalHistoryNames.add(name));
-            });
-
             const combinedDictionary = [...smartDictionary];
-            globalHistoryNames.forEach(histName => {
-                if(!combinedDictionary.some(d => d.name.toLowerCase() === histName.toLowerCase())) {
-                    let foundCat = defaultCategories[2];
-                    Object.keys(localState.markets).forEach(mName => {
-                        if(localState.markets[mName].history[histName]) foundCat = localState.markets[mName].history[histName].category;
-                    });
-                    combinedDictionary.push({ name: histName, cat: foundCat });
-                }
-            });
-
-            const matches = combinedDictionary.filter(item => item.name.toLowerCase().includes(filter) && activeCategories.includes(item.cat)).slice(0, 5);
-
-            if (matches.length > 0) {
-                listContainer.innerHTML = '';
-                listContainer.style.display = 'block';
+            if (matches = combinedDictionary.filter(item => item.name.toLowerCase().includes(filter) && activeCategories.includes(item.cat)).slice(0, 5)) {
+                listContainer.innerHTML = ''; listContainer.style.display = 'block';
                 matches.forEach(match => {
-                    const estimatedPrice = findEstimatedPriceGlobal(match.name);
+                    const estPrice = findEstimatedPriceGlobal(match.name);
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
-                    div.innerHTML = `<span>${match.name} ${estimatedPrice > 0 ? `(~${estimatedPrice.toFixed(2)}€)` : ''}</span><span style="font-size:11px; color:var(--text-muted); background:rgba(255,255,255,0.06); padding:4px 8px; border-radius:8px;">${match.cat}</span>`;
-                    
-                    const selectThis = (e) => { e.preventDefault(); e.stopPropagation(); selectSuggestion(match.name, match.cat); };
-                    div.addEventListener('touchstart', selectThis, { passive: false });
-                    div.addEventListener('mousedown', selectThis);
+                    div.innerHTML = `<span>${match.name} ${estPrice > 0 ? `(~${estPrice.toFixed(2)}€)` : ''}</span><span style="font-size:11px; color:var(--text-muted);">${match.cat}</span>`;
+                    div.onclick = () => selectSuggestion(match.name, match.cat);
                     listContainer.appendChild(div);
                 });
             } else { listContainer.style.display = 'none'; }
@@ -612,7 +597,6 @@
             document.getElementById('autocompleteList').style.display = 'none';
             const estPrice = findEstimatedPriceGlobal(name);
             document.getElementById('priceInput').value = estPrice > 0 ? estPrice : '';
-            document.getElementById('itemInput').blur();
             triggerHapticFeedback();
         }
 
@@ -625,17 +609,15 @@
             const sortedHistory = Object.keys(history)
                 .map(name => ({ name: name, ...history[name] }))
                 .filter(item => activeCategories.includes(item.category))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 6);
+                .sort((a, b) => b.count - a.count).slice(0, 5);
 
             if (sortedHistory.length > 0) {
-                zone.style.display = 'block';
-                container.innerHTML = '';
+                zone.style.display = 'block'; container.innerHTML = '';
                 sortedHistory.forEach(item => {
                     const btn = document.createElement('button');
                     btn.className = 'frequent-chip';
                     const currentEst = findEstimatedPriceGlobal(item.name);
-                    btn.innerText = `+ ${item.name} ${currentEst > 0 ? `(${currentEst.toFixed(2)}€)` : ''}`;
+                    btn.innerText = `+ ${item.name}`;
                     btn.onclick = () => {
                         triggerHapticFeedback();
                         getActiveMarket().items.push({ id: Date.now(), name: item.name, category: item.category, qty: 1, price: currentEst || 0, completed: false });
@@ -646,20 +628,13 @@
             } else { zone.style.display = 'none'; }
         }
 
-        document.addEventListener('click', (e) => {
-            if (e.target.id !== 'itemInput' && e.target.className !== 'suggestion-item' && e.target.id !== 'voiceBtn') {
-                const ac = document.getElementById('autocompleteList');
-                if(ac) ac.style.display = 'none';
-            }
-        });
-
         function updateMarketSelectorUI() {
             const select = document.getElementById('marketSelect');
             select.innerHTML = '';
-            Object.keys(localState.markets).forEach(marketName => {
+            Object.keys(localState.markets).forEach(mName => {
                 const opt = document.createElement('option');
-                opt.value = marketName; opt.innerText = marketName;
-                if(marketName === localState.currentMarket) opt.selected = true;
+                opt.value = mName; opt.innerText = mName;
+                if(mName === localState.currentMarket) opt.selected = true;
                 select.appendChild(opt);
             });
         }
@@ -669,19 +644,15 @@
             const input = document.getElementById('newMarketInput');
             const name = input.value.trim();
             if (name !== '' && !localState.markets[name]) {
-                triggerHapticFeedback();
                 localState.markets[name] = { categories: [...defaultCategories], items: [], history: {} };
-                localState.currentMarket = name;
-                input.value = ''; pushToCloud();
+                localState.currentMarket = name; input.value = ''; pushToCloud();
             }
         }
-
         function deleteMarket() {
-            if (Object.keys(localState.markets).length <= 1) { alert("Devi avere almeno un supermercato attivo!"); return; }
-            if (confirm(`Vuoi davvero eliminare "${localState.currentMarket}"?`)) {
+            if (Object.keys(localState.markets).length <= 1) return;
+            if (confirm(`Eliminare ${localState.currentMarket}?`)) {
                 delete localState.markets[localState.currentMarket];
-                localState.currentMarket = Object.keys(localState.markets)[0];
-                pushToCloud();
+                localState.currentMarket = Object.keys(localState.markets)[0]; pushToCloud();
             }
         }
 
@@ -698,97 +669,71 @@
             const currentCatList = getActiveMarket().categories;
             const currentItems = getActiveMarket().items || [];
             
-            const savedSelection = select.value;
-            select.innerHTML = '';
+            const saved = select.value; select.innerHTML = '';
             currentCatList.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat; opt.innerText = cat;
-                select.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = cat; opt.innerText = cat; select.appendChild(opt);
             });
-            if(savedSelection && currentCatList.includes(savedSelection)) select.value = savedSelection;
+            if(saved && currentCatList.includes(saved)) select.value = saved;
 
             catListElement.innerHTML = '';
             currentCatList.forEach((cat, index) => {
                 const li = document.createElement('li');
-                const countInCat = currentItems.filter(item => item.category === cat).length;
-                li.className = countInCat > 0 ? 'cat-chip has-items' : 'cat-chip';
-                
+                const count = currentItems.filter(item => item.category === cat).length;
+                li.className = count > 0 ? 'cat-chip has-items' : 'cat-chip';
                 li.innerHTML = `
-                    <div><span>${cat}</span>${countInCat > 0 ? `<span class="cat-badge">${countInCat} pr.</span>` : ''}</div>
+                    <div><span>${cat}</span>${count > 0 ? `<span class="cat-badge">${count}</span>` : ''}</div>
                     <div class="cat-actions">
                         <button class="move-btn" onclick="moveCategory(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
                         <button class="move-btn" onclick="moveCategory(${index}, 1)" ${index === currentCatList.length - 1 ? 'disabled' : ''}>▼</button>
-                        <button class="delete-cat-btn" style="border:none; background:none; padding:4px;" onclick="deleteCategory(${index})">×</button>
+                        <button class="delete-cat-btn" style="border:none; background:none;" onclick="deleteCategory(${index})">×</button>
                     </div>`;
                 catListElement.appendChild(li);
             });
         }
 
-        function moveCategory(index, direction) {
-            const currentCatList = getActiveMarket().categories;
-            [currentCatList[index], currentCatList[index + direction]] = [currentCatList[index + direction], currentCatList[index]];
-            pushToCloud();
+        function moveCategory(index, dir) {
+            const list = getActiveMarket().categories;
+            [list[index], list[index + dir]] = [list[index + dir], list[index]]; pushToCloud();
         }
-
         function addCategory() {
-            const input = document.getElementById('newCatInput');
-            const text = input.value.trim();
-            if (text !== '' && !getActiveMarket().categories.includes(text)) {
-                getActiveMarket().categories.push(text);
-                input.value = ''; pushToCloud();
+            const text = document.getElementById('newCatInput').value.trim();
+            if (text && !getActiveMarket().categories.includes(text)) {
+                getActiveMarket().categories.push(text); document.getElementById('newCatInput').value = ''; pushToCloud();
             }
         }
-
         function deleteCategory(index) { getActiveMarket().categories.splice(index, 1); pushToCloud(); }
 
         function renderList() {
             const container = document.getElementById('shoppingListContainer');
-            container.innerHTML = ''; 
-            const activeMarket = getActiveMarket();
-
-            let totaleEsecuzioneLista = 0;
-            let totaleCarrello = 0;
-            
-            let totaleProdottiDellaLista = activeMarket.items.length;
-            let prodottiCompletatiCarrello = activeMarket.items.filter(item => item.completed).length;
+            container.innerHTML = ''; const activeMarket = getActiveMarket();
+            let estTotal = 0, cartTotal = 0;
+            let totalItems = activeMarket.items.length;
+            let compItems = activeMarket.items.filter(i => i.completed).length;
 
             const progressZone = document.getElementById('progressZone');
-            const progressBar = document.getElementById('progressBar');
-            const progressLabel = document.getElementById('progressLabel');
-
-            if (totaleProdottiDellaLista > 0) {
+            if (totalItems > 0) {
                 progressZone.style.display = 'block';
-                let percentuale = Math.round((prodottiCompletatiCarrello / totaleProdottiDellaLista) * 100);
-                progressBar.style.width = `${percentuale}%`;
-                progressLabel.innerText = `${prodottiCompletatiCarrello} / ${totaleProdottiDellaLista} prodotti nel carrello (${percentuale}%)`;
+                let pct = Math.round((compItems / totalItems) * 100);
+                document.getElementById('progressBar').style.width = `${pct}%`;
+                document.getElementById('progressLabel').innerText = `${compItems} / ${totalItems} nel carrello (${pct}%)`;
             } else { progressZone.style.display = 'none'; }
 
             activeMarket.categories.forEach(reparto => {
-                const prodottiNelReparto = activeMarket.items.filter(item => item.category === reparto);
-
-                if (prodottiNelReparto.length > 0) {
+                const prodotti = activeMarket.items.filter(item => item.category === reparto);
+                if (prodotti.length > 0) {
                     const header = document.createElement('div');
-                    header.className = 'category-header'; header.innerText = reparto;
-                    container.appendChild(header);
-
-                    const ul = document.createElement('ul');
-                    ul.className = 'product-list';
-                    prodottiNelReparto.forEach(item => {
-                        const li = document.createElement('li');
-                        li.className = 'product-item';
+                    header.className = 'category-header'; header.innerText = reparto; container.appendChild(header);
+                    const ul = document.createElement('ul'); ul.className = 'product-list';
+                    
+                    prodotti.forEach(item => {
+                        const li = document.createElement('li'); li.className = 'product-item';
                         if (item.completed) li.classList.add('completed');
-
-                        const costoTotaleProdotto = item.qty * item.price;
-                        totaleEsecuzioneLista += costoTotaleProdotto;
-                        if (item.completed) totaleCarrello += costoTotaleProdotto;
-
-                        let infoString = `x${item.qty}`;
-                        if (item.price > 0) { infoString += ` (${item.price.toFixed(2)}€ cad. = ${costoTotaleProdotto.toFixed(2)}€)`; }
+                        const cost = item.qty * item.price; estTotal += cost; if (item.completed) cartTotal += cost;
 
                         li.innerHTML = `
                             <button class="check-btn" onclick="toggleItem(${item.id})"></button>
                             <span class="item-text" onclick="toggleItem(${item.id})">${item.name}</span>
-                            <span class="item-details">${infoString}</span>
+                            <span class="item-details">x${item.qty} ${item.price > 0 ? `(${item.price.toFixed(2)}€)` : ''}</span>
                             <button class="delete-btn" onclick="deleteItem(${item.id})">🗑️</button>
                         `;
                         ul.appendChild(li);
@@ -797,109 +742,82 @@
                 }
             });
 
-            const budgetDashboard = document.getElementById('budgetDashboard');
+            const dbd = document.getElementById('budgetDashboard');
             if (activeMarket.items.length > 0) {
-                budgetDashboard.style.display = 'block';
-                document.getElementById('estimatedTotal').innerText = `${totaleEsecuzioneLista.toFixed(2)} €`;
-                document.getElementById('cartTotal').innerText = `${totaleCarrello.toFixed(2)} €`;
-            } else { budgetDashboard.style.display = 'none'; }
+                dbd.style.display = 'block';
+                document.getElementById('estimatedTotal').innerText = `${estTotal.toFixed(2)} €`;
+                document.getElementById('cartTotal').innerText = `${cartTotal.toFixed(2)} €`;
+            } else { dbd.style.display = 'none'; }
 
-            const haProdottiCompletati = activeMarket.items.some(item => item.completed);
-            const haProdottiInTotale = activeMarket.items.length > 0;
-
-            document.getElementById('clearCompletedBtn').style.display = 'block';
-            document.getElementById('resetAllBtn').style.display = 'block';
-            document.getElementById('clearCompletedBtn').style.opacity = haProdottiCompletati ? '1' : '0.2';
-            document.getElementById('clearCompletedBtn').style.pointerEvents = haProdottiCompletati ? 'auto' : 'none';
-            document.getElementById('resetAllBtn').style.opacity = haProdottiInTotale ? '1' : '0.2';
-            document.getElementById('resetAllBtn').style.pointerEvents = haProdottiInTotale ? 'auto' : 'none';
+            document.getElementById('clearCompletedBtn').style.opacity = compItems > 0 ? '1' : '0.2';
+            document.getElementById('clearCompletedBtn').style.pointerEvents = compItems > 0 ? 'auto' : 'none';
+            document.getElementById('resetAllBtn').style.opacity = totalItems > 0 ? '1' : '0.2';
+            document.getElementById('resetAllBtn').style.pointerEvents = totalItems > 0 ? 'auto' : 'none';
         }
 
         function addItem() {
             const input = document.getElementById('itemInput');
-            const categorySelect = document.getElementById('categoryInput');
-            const qtyInput = document.getElementById('qtyInput');
-            const priceInput = document.getElementById('priceInput');
+            const catSel = document.getElementById('categoryInput');
+            const qtyIn = document.getElementById('qtyInput');
+            const prIn = document.getElementById('priceInput');
+            const text = input.value.trim(); const qty = parseInt(qtyIn.value) || 1; const price = parseFloat(prIn.value) || 0;
             
-            const text = input.value.trim();
-            const qty = parseInt(qtyInput.value) || 1;
-            const price = parseFloat(priceInput.value) || 0;
-            
-            if (text !== '' && categorySelect.value) {
-                triggerHapticFeedback();
-                const activeMarket = getActiveMarket();
-                
-                if (!activeMarket.history) activeMarket.history = {};
-                if (!activeMarket.history[text]) { activeMarket.history[text] = { category: categorySelect.value, count: 0, price: price }; }
-                activeMarket.history[text].count += 1;
-                if(price > 0) activeMarket.history[text].price = price;
+            if (text && catSel.value) {
+                triggerHapticFeedback(); const am = getActiveMarket();
+                if (!am.history) am.history = {};
+                if (!am.history[text]) am.history[text] = { category: catSel.value, count: 0, price: price };
+                am.history[text].count += 1; if(price > 0) am.history[text].price = price;
 
-                activeMarket.items.push({ id: Date.now(), name: text, category: categorySelect.value, qty: qty, price: price, completed: false });
-                input.value = ''; qtyInput.value = '1'; priceInput.value = '';
-                pushToCloud();
+                am.items.push({ id: Date.now(), name: text, category: catSel.value, qty: qty, price: price, completed: false });
+                input.value = ''; qtyIn.value = '1'; prIn.value = ''; pushToCloud();
             }
         }
 
         function toggleItem(id) {
-            triggerHapticFeedback();
-            const activeItems = getActiveMarket().items;
-            const index = activeItems.findIndex(item => item.id === id);
-            if (index !== -1) { activeItems[index].completed = !activeItems[index].completed; pushToCloud(); }
+            triggerHapticFeedback(); const items = getActiveMarket().items;
+            const idx = items.findIndex(i => i.id === id);
+            if (idx !== -1) { items[idx].completed = !items[idx].completed; pushToCloud(); }
         }
-
         function deleteItem(id) {
-            const activeItems = getActiveMarket().items;
-            const index = activeItems.findIndex(item => item.id === id);
-            if (index !== -1) { activeItems.splice(index, 1); pushToCloud(); }
+            const items = getActiveMarket().items;
+            const idx = items.findIndex(i => i.id === id);
+            if (idx !== -1) { items.splice(idx, 1); pushToCloud(); }
         }
 
-function clearCompleted() {
-    triggerHapticFeedback();
-    const activeMarket = getActiveMarket();
-    
-    // 1. Isola i prodotti spuntati
-    const itemsComprati = activeMarket.items.filter(item => item.completed);
-    
-    if (itemsComprati.length === 0) {
-        alert("Non ci sono prodotti spuntati nel carrello!");
-        return;
-    }
+        // FUNZIONE SVUOTA CARRELLO INTEGRATA CON SALVATAGGIO STORICO LOCALE
+        function clearCompleted() {
+            triggerHapticFeedback();
+            const activeMarket = getActiveMarket();
+            const itemsComprati = activeMarket.items.filter(item => item.completed);
+            
+            if (itemsComprati.length === 0) return;
 
-    // Preparazione delle date per le statistiche
-    const oggi = new Date();
-    const meseCorrente = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
-    const dataCompleta = oggi.toISOString().split('T')[0];
+            const oggi = new Date();
+            const meseCorrente = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
+            const dataCompleta = oggi.toISOString().split('T')[0];
 
-    // 2. Se non esiste una sezione storico nel nostro stato locale, creiamola al volo
-    if (!localState.storico_spese) {
-        localState.storico_spese = [];
-    }
+            if (!localState.storico_spese) { localState.storico_spese = []; }
 
-    // 3. Sposta i prodotti dentro lo storico locale con prezzo e data
-    itemsComprati.forEach(item => {
-        localState.storico_spese.push({
-            nome: item.name,
-            prezzo: parseFloat(item.price) || 0,
-            quantita: parseInt(item.qty) || 1,
-            categoria: item.category || "Generale",
-            mercato: localState.currentMarket,
-            mese: meseCorrente,
-            data: dataCompleta
-        });
-    });
+            itemsComprati.forEach(item => {
+                localState.storico_spese.push({
+                    nome: item.name,
+                    prezzo: parseFloat(item.price) || 0,
+                    quantita: parseInt(item.qty) || 1,
+                    categoria: item.category || "Generale",
+                    mercato: localState.currentMarket,
+                    mese: meseCorrente,
+                    data: dataCompleta
+                });
+            });
 
-    // 4. Cancella i prodotti completati dalla lista attiva
-    activeMarket.items = activeMarket.items.filter(item => !item.completed);
-    
-    // 5. Sincronizza TUTTO su Firebase (lista svuotata + storico salvato insieme!)
-    pushToCloud();
-}
-        function resetAllList() {
-            if (confirm(`Vuoi azzerare la lista?`)) { getActiveMarket().items = []; pushToCloud(); }
+            activeMarket.items = activeMarket.items.filter(item => !item.completed);
+            pushToCloud();
         }
+
+        function resetAllList() { if (confirm(`Azzerare la lista?`)) { getActiveMarket().items = []; pushToCloud(); } }
 
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').catch(err => console.error('Errore SW', err)); });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').catch(() => {}); });
         }
     </script>
 </body>
