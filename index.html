@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SuperSpesa Pro Cloud 🛒</title>
+    <title>SpesaPro Cloud 🛒</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B0E14">
     
-    <!-- Libreria Chart.js per i grafici -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -39,8 +38,8 @@
         .container {
             width: 100%;
             max-width: 480px;
-            margin-bottom: 80px; /* Spazio extra per non coprire il menu inferiore */
-            display: none; /* Nascosta finché non viene fatto il login */
+            margin-bottom: 80px; /* Spazio per il menu inferiore */
+            display: none; /* Nascosta prima del login */
         }
 
         /* SCHERMATA DI LOGIN DIRETTA */
@@ -127,11 +126,23 @@
             font-size: 12px;
             cursor: pointer;
             float: right;
-            margin-top: -36px;
+            margin-top: -38px;
         }
 
-        /* STILI GENERALI */
-        h1 { text-align: center; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-top: 10px; margin-bottom: 6px; background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* TITOLO AGGIORNATO E PROTETTO DA SOVRAPPOSIZIONI */
+        h1 { 
+            text-align: left; 
+            padding-right: 85px; 
+            font-size: 26px; 
+            font-weight: 800; 
+            letter-spacing: -0.5px; 
+            margin-top: 10px; 
+            margin-bottom: 6px; 
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+
         .progress-container { margin-bottom: 24px; text-align: center; display: none; }
         .progress-bar-bg { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; height: 10px; width: 100%; overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
         .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue)); box-shadow: 0 0 12px var(--neon-blue); border-radius: 20px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -139,11 +150,11 @@
         .glass-panel { background: var(--panel-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--panel-border); border-radius: 24px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
         .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; color: var(--neon-blue); margin-bottom: 10px; }
         
-        /* SEZIONE APP SCHEDE (PANNELLI SPESA / DISPENSA) */
+        /* SEZIONE APP SCHEDE */
         .app-view { display: none; }
         .app-view.active { display: block; }
 
-        /* NAVIGAZIONE INFERIORE CORRETTA STILE APPLE */
+        /* NAVIGAZIONE INFERIORE APPLE STYLE */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 68px; background: rgba(15, 20, 30, 0.9); border-top: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; align-items: center; z-index: 99999; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s ease; font-size: 11px; font-weight: 600; }
         .nav-item .nav-icon { font-size: 20px; transition: transform 0.2s; }
@@ -192,14 +203,14 @@
         .item-text { flex: 1; font-size: 16px; margin-left: 14px; cursor: pointer; }
         .item-details { font-size: 13px; color: var(--text-muted); margin-right: 12px; }
         
-        /* BOTTONI SPUNTATO LISTA */
+        /* BOTTONI CARRELLO */
         .check-btn { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%; width: 26px; height: 26px; cursor: pointer; }
         .completed .check-btn { background: var(--neon-green); border-color: var(--neon-green); }
         .completed .check-btn::after { content: "✓"; color: #000; font-size: 15px; font-weight: 900; display: block; text-align: center; line-height: 22px; }
         .completed .item-text { text-decoration: line-through; color: var(--text-muted); }
         .delete-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; }
 
-        /* INTERFACCIA STATUS DISPENSA (INTERRUTTORI APPOSITI) */
+        /* STATUS DISPENSA */
         .pantry-status-btn { padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
         .pantry-status-btn.stocked { background: rgba(57, 255, 20, 0.08); border-color: rgba(57, 255, 20, 0.3); color: var(--neon-green); }
         .pantry-status-btn.empty { background: rgba(255, 49, 49, 0.1); border-color: rgba(255, 49, 49, 0.3); color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 49, 49, 0.1); }
@@ -234,7 +245,6 @@
 </head>
 <body>
 
-    <!-- OVERLAY DI ACCESSO -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
             <div class="login-title">SuperSpesa Cloud 🔒</div>
@@ -245,12 +255,10 @@
         </div>
     </div>
 
-    <!-- CONTENITORE APPLICAZIONE -->
     <div class="container" id="appContainer">
-        <h1>SuperSpesa Pro Cloud 🛒</h1>
+        <h1>SpesaPro</h1>
         <button class="logout-header-btn" onclick="handleLogout()">Esci 🚪</button>
         
-        <!-- VISTA SPESA (SCHEDA 1) -->
         <div id="viewShopping" class="app-view active">
             <div class="progress-container" id="progressZone">
                 <div class="progress-bar-bg">
@@ -259,7 +267,6 @@
                 <div class="progress-text" id="progressLabel">0 / 0 prodotti nel carrello (0%)</div>
             </div>
             
-            <!-- SEZIONE REPORT -->
             <div class="stats-wrapper">
                 <button class="stats-toggle-btn" onclick="toggleStatsPanel()">
                     <span>📊</span> <span id="statsBtnText">Mostra Statistiche Spese</span>
@@ -280,7 +287,6 @@
                 </div>
             </div>
             
-            <!-- SELEZIONE SUPERMERCATO -->
             <div class="glass-panel">
                 <div class="section-title">Supermercato Corrente</div>
                 <div class="input-group" style="margin-bottom: 0;">
@@ -295,7 +301,6 @@
                 </div>
             </div>
             
-            <!-- GESTIONE CORSIE -->
             <div class="glass-panel" style="padding: 16px 20px;">
                 <div class="category-manager-title" onclick="toggleCatManager()">
                     <span style="color: #9D4EDD; font-weight: 700;">⚙️ Configura Ordine Corsie</span>
@@ -310,7 +315,6 @@
                 </div>
             </div>
 
-            <!-- INPUT PRODOTTO -->
             <div class="glass-panel">
                 <div class="section-title">Aggiungi Prodotto in Lista</div>
                 <div class="input-group">
@@ -326,16 +330,13 @@
                 </div>
             </div>
 
-            <!-- PIÙ COMPRATI -->
             <div class="frequent-products-zone" id="frequentZone" style="display: none; margin: 0 6px 16px 6px;">
                 <div class="section-title" style="color: #9D4EDD;">⭐ Comprati Spesso:</div>
                 <div class="frequent-chips-container" id="frequentChips"></div>
             </div>
 
-            <!-- CONTENITORE EFFETTIVO DELLE LISTE -->
             <div id="shoppingListContainer"></div>
 
-            <!-- DASHBOARD BUDGET -->
             <div class="budget-dashboard" id="budgetDashboard">
                 <div class="budget-row">
                     <span>Totale stimato lista:</span>
@@ -353,15 +354,12 @@
             </div>
         </div>
 
-        <!-- VISTA DISPENSA (SCHEDA 2 - NUOVA) -->
         <div id="viewPantry" class="app-view">
-            <!-- FILTRI DISPENSA -->
             <div class="pantry-filters">
                 <div id="filterPantryAll" class="filter-chip active" onclick="setPantryFilter('all')">Tutta la Dispensa</div>
                 <div id="filterPantryMissing" class="filter-chip" onclick="setPantryFilter('missing')">🔴 Cose Finite</div>
             </div>
 
-            <!-- AGGIUNGI IN DISPENSA -->
             <div class="glass-panel">
                 <div class="section-title">Aggiungi Elemento in Dispensa</div>
                 <div class="input-group" style="margin-bottom: 0;">
@@ -372,11 +370,9 @@
                 </div>
             </div>
 
-            <!-- ELENCO ARTICOLI DISPENSA -->
             <div id="pantryListContainer"></div>
         </div>
 
-        <!-- BARRA DI NAVIGAZIONE INFERIORE -->
         <nav class="bottom-nav">
             <button id="navShopping" class="nav-item active" onclick="switchTab('shopping')">
                 <span class="nav-icon">🛒</span>
@@ -389,7 +385,6 @@
         </nav>
     </div>
 
-    <!-- SCRIPT FIREBASE COMPAT -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -412,9 +407,9 @@
         let databaseListener = null;
         let chartCategoryInstance = null;
         let chartMonthlyInstance = null;
-        let currentPantryFilter = 'all'; // 'all' o 'missing'
+        let currentPantryFilter = 'all';
 
-        // GESTIONE DELLO STATO DELL'AUTENTICAZIONE
+        // ACCESSO E AGGANCIO UTENTE
         auth.onAuthStateChanged((user) => {
             const loginOverlay = document.getElementById('loginOverlay');
             const appContainer = document.getElementById('appContainer');
@@ -475,7 +470,7 @@
                 "Supermercato Standard": { categories: [...defaultCategories], items: [], history: {} }
             },
             storico_spese: [],
-            dispensa: [] // Nuovo database interno della dispensa
+            dispensa: []
         };
 
         function startRealtimeSync() {
@@ -498,7 +493,6 @@
             });
         }
 
-        // CAMBIO DI TAB SPESA / DISPENSA
         function switchTab(tab) {
             triggerHapticFeedback();
             document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
@@ -524,7 +518,6 @@
             renderPantry();
         }
 
-        // FUNZIONE PER CONTROLLARE APERTURA/CHIUSURA STATISTICHE
         function toggleStatsPanel() {
             const panel = document.getElementById('statsPanel');
             const btnText = document.getElementById('statsBtnText');
@@ -536,7 +529,6 @@
             }
         }
 
-        // GENERATORE DEI GRAFICI CON CHART.JS
         function buildCharts() {
             const storico = localState.storico_spese || [];
             const oggi = new Date();
@@ -605,7 +597,6 @@
             });
         }
 
-        // DETTATURA VOCALE MULTI-INPUT
         function startVoiceRecognition(inputId) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) { alert("Dettatura non supportata."); return; }
@@ -639,7 +630,6 @@
             return latestPriceFound || (smartDictionary.find(d => d.name.toLowerCase() === productName.toLowerCase())?.price || 0);
         }
 
-        // SUGGERIMENTI AUTOCOMPLETE
         const itemInput = document.getElementById('itemInput');
         if(itemInput) {
             ['input', 'focus'].forEach(evt => {
@@ -685,315 +675,4 @@
             const sortedHistory = Object.keys(history)
                 .map(name => ({ name: name, ...history[name] }))
                 .filter(item => activeCategories.includes(item.category))
-                .sort((a, b) => b.count - a.count).slice(0, 5);
-
-            if (sortedHistory.length > 0) {
-                zone.style.display = 'block'; container.innerHTML = '';
-                sortedHistory.forEach(item => {
-                    const btn = document.createElement('button');
-                    btn.className = 'frequent-chip'; btn.innerText = `+ ${item.name}`;
-                    btn.onclick = () => {
-                        triggerHapticFeedback();
-                        getActiveMarket().items.push({ id: Date.now(), name: item.name, category: item.category, qty: 1, price: findEstimatedPriceGlobal(item.name), completed: false });
-                        pushToCloud();
-                    };
-                    container.appendChild(btn);
-                });
-            } else { zone.style.display = 'none'; }
-        }
-
-        function updateMarketSelectorUI() {
-            const select = document.getElementById('marketSelect'); select.innerHTML = '';
-            Object.keys(localState.markets).forEach(mName => {
-                const opt = document.createElement('option'); opt.value = mName; opt.innerText = mName;
-                if(mName === localState.currentMarket) opt.selected = true;
-                select.appendChild(opt);
-            });
-        }
-
-        function changeMarket() { localState.currentMarket = document.getElementById('marketSelect').value; pushToCloud(); }
-        function addMarket() {
-            const input = document.getElementById('newMarketInput'); const name = input.value.trim();
-            if (name && !localState.markets[name]) {
-                localState.markets[name] = { categories: [...defaultCategories], items: [], history: {} };
-                localState.currentMarket = name; input.value = ''; pushToCloud();
-            }
-        }
-        function deleteMarket() {
-            if (Object.keys(localState.markets).length <= 1) return;
-            if (confirm(`Eliminare ${localState.currentMarket}?`)) {
-                delete localState.markets[localState.currentMarket];
-                localState.currentMarket = Object.keys(localState.markets)[0]; pushToCloud();
-            }
-        }
-
-        function toggleCatManager() {
-            const content = document.getElementById('catContent'); const sign = document.getElementById('panelsign');
-            content.classList.toggle('open'); sign.innerText = content.classList.contains('open') ? "▼" : "▶";
-        }
-
-        function updateCategoryUI() {
-            const select = document.getElementById('categoryInput');
-            const pantrySelect = document.getElementById('pantryCategoryInput');
-            const catListElement = document.getElementById('customCatList');
-            const currentCatList = getActiveMarket().categories;
-            const currentItems = getActiveMarket().items || [];
-            
-            // Popola menu categorie spesa
-            select.innerHTML = '';
-            currentCatList.forEach(cat => {
-                const opt = document.createElement('option'); opt.value = cat; opt.innerText = cat; select.appendChild(opt);
-            });
-
-            // Popola menu categorie dispensa
-            pantrySelect.innerHTML = '';
-            currentCatList.forEach(cat => {
-                const opt = document.createElement('option'); opt.value = cat; opt.innerText = cat; pantrySelect.appendChild(opt);
-            });
-
-            catListElement.innerHTML = '';
-            currentCatList.forEach((cat, index) => {
-                const li = document.createElement('li');
-                const count = currentItems.filter(item => item.category === cat).length;
-                li.className = count > 0 ? 'cat-chip has-items' : 'cat-chip';
-                li.innerHTML = `
-                    <div><span>${cat}</span>${count > 0 ? `<span class="cat-badge">${count}</span>` : ''}</div>
-                    <div class="cat-actions">
-                        <button class="move-btn" onclick="moveCategory(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
-                        <button class="move-btn" onclick="moveCategory(${index}, 1)" ${index === currentCatList.length - 1 ? 'disabled' : ''}>▼</button>
-                        <button class="delete-cat-btn" style="border:none; background:none;" onclick="deleteCategory(${index})">×</button>
-                    </div>`;
-                catListElement.appendChild(li);
-            });
-        }
-
-        function moveCategory(index, dir) {
-            const list = getActiveMarket().categories; [list[index], list[index + dir]] = [list[index + dir], list[index]]; pushToCloud();
-        }
-        function addCategory() {
-            const text = document.getElementById('newCatInput').value.trim();
-            if (text && !getActiveMarket().categories.includes(text)) {
-                getActiveMarket().categories.push(text); document.getElementById('newCatInput').value = ''; pushToCloud();
-            }
-        }
-        function deleteCategory(index) { getActiveMarket().categories.splice(index, 1); pushToCloud(); }
-
-        // RENDERING DELLA SCHERMATA SPESA
-        function renderList() {
-            const container = document.getElementById('shoppingListContainer'); container.innerHTML = '';
-            const activeMarket = getActiveMarket();
-            let estTotal = 0, cartTotal = 0;
-            let totalItems = activeMarket.items.length;
-            let compItems = activeMarket.items.filter(i => i.completed).length;
-
-            const progressZone = document.getElementById('progressZone');
-            if (totalItems > 0) {
-                progressZone.style.display = 'block';
-                let pct = Math.round((compItems / totalItems) * 100);
-                document.getElementById('progressBar').style.width = `${pct}%`;
-                document.getElementById('progressLabel').innerText = `${compItems} / ${totalItems} nel carrello (${pct}%)`;
-            } else { progressZone.style.display = 'none'; }
-
-            activeMarket.categories.forEach(reparto => {
-                const prodotti = activeMarket.items.filter(item => item.category === reparto);
-                if (prodotti.length > 0) {
-                    const header = document.createElement('div'); header.className = 'category-header'; header.innerText = reparto; container.appendChild(header);
-                    const ul = document.createElement('ul'); ul.className = 'product-list';
-                    
-                    prodotti.forEach(item => {
-                        const li = document.createElement('li'); li.className = 'product-item';
-                        if (item.completed) li.classList.add('completed');
-                        const cost = item.qty * item.price; estTotal += cost; if (item.completed) cartTotal += cost;
-
-                        li.innerHTML = `
-                            <button class="check-btn" onclick="toggleItem(${item.id})"></button>
-                            <span class="item-text" onclick="toggleItem(${item.id})">${item.name}</span>
-                            <span class="item-details">x${item.qty} ${item.price > 0 ? `(${item.price.toFixed(2)}€)` : ''}</span>
-                            <button class="delete-btn" onclick="deleteItem(${item.id})">🗑️</button>
-                        `;
-                        ul.appendChild(li);
-                    });
-                    container.appendChild(ul);
-                }
-            });
-
-            const dbd = document.getElementById('budgetDashboard');
-            if (activeMarket.items.length > 0) {
-                dbd.style.display = 'block';
-                document.getElementById('estimatedTotal').innerText = `${estTotal.toFixed(2)} €`;
-                document.getElementById('cartTotal').innerText = `${cartTotal.toFixed(2)} €`;
-            } else { dbd.style.display = 'none'; }
-
-            document.getElementById('clearCompletedBtn').style.opacity = compItems > 0 ? '1' : '0.2';
-            document.getElementById('clearCompletedBtn').style.pointerEvents = compItems > 0 ? 'auto' : 'none';
-            document.getElementById('resetAllBtn').style.opacity = totalItems > 0 ? '1' : '0.2';
-            document.getElementById('resetAllBtn').style.pointerEvents = totalItems > 0 ? 'auto' : 'none';
-        }
-
-        function addItem() {
-            const input = document.getElementById('itemInput'); const catSel = document.getElementById('categoryInput');
-            const qtyIn = document.getElementById('qtyInput'); const prIn = document.getElementById('priceInput');
-            const text = input.value.trim(); const qty = parseInt(qtyIn.value) || 1; const price = parseFloat(prIn.value) || 0;
-            
-            if (text && catSel.value) {
-                triggerHapticFeedback(); const am = getActiveMarket();
-                if (!am.history) am.history = {};
-                if (!am.history[text]) am.history[text] = { category: catSel.value, count: 0, price: price };
-                am.history[text].count += 1; if(price > 0) am.history[text].price = price;
-
-                am.items.push({ id: Date.now(), name: text, category: catSel.value, qty: qty, price: price, completed: false });
-                input.value = ''; qtyIn.value = '1'; prIn.value = ''; pushToCloud();
-            }
-        }
-
-        function toggleItem(id) {
-            triggerHapticFeedback(); const items = getActiveMarket().items;
-            const idx = items.findIndex(i => i.id === id);
-            if (idx !== -1) { items[idx].completed = !items[idx].completed; pushToCloud(); }
-        }
-        function deleteItem(id) {
-            const items = getActiveMarket().items;
-            const idx = items.findIndex(i => i.id === id);
-            if (idx !== -1) { items.splice(idx, 1); pushToCloud(); }
-        }
-
-        // RENDERING LOGICO DELLA SCHERMATA DISPENSA
-        function renderPantry() {
-            const container = document.getElementById('pantryListContainer'); if(!container) return;
-            container.innerHTML = '';
-            const pantryItems = localState.dispensa || [];
-            const activeMarket = getActiveMarket();
-
-            activeMarket.categories.forEach(reparto => {
-                let prodottiCat = pantryItems.filter(item => item.categoria === reparto);
-                
-                // Filtro "Cose Finite"
-                if (currentPantryFilter === 'missing') {
-                    prodottiCat = prodottiCat.filter(item => item.stato === 'esaurito');
-                }
-
-                if (prodottiCat.length > 0) {
-                    const header = document.createElement('div'); header.className = 'category-header'; header.innerText = reparto; container.appendChild(header);
-                    const ul = document.createElement('ul'); ul.className = 'product-list';
-                    
-                    prodottiCat.forEach(item => {
-                        const li = document.createElement('li'); li.className = 'product-item';
-                        const isStocked = item.stato === 'disponibile';
-
-                        li.innerHTML = `
-                            <span class="item-text" style="margin-left:6px; font-weight:500;">${item.nome}</span>
-                            <button class="pantry-status-btn ${isStocked ? 'stocked' : 'empty'}" onclick="togglePantryStatus('${item.nome}')">
-                                ${isStocked ? '🟢 Disponibile' : '🔴 Finito! Compra'}
-                            </button>
-                            <button class="delete-btn" style="margin-left: 14px;" onclick="deletePantryItem('${item.nome}')">🗑️</button>
-                        `;
-                        ul.appendChild(li);
-                    });
-                    container.appendChild(ul);
-                }
-            });
-        }
-
-        function addPantryItem() {
-            const input = document.getElementById('pantryItemInput');
-            const catSel = document.getElementById('pantryCategoryInput');
-            const nome = input.value.trim();
-
-            if (nome && catSel.value) {
-                triggerHapticFeedback();
-                if (!localState.dispensa) localState.dispensa = [];
-                
-                // Controlla doppioni
-                if (localState.dispensa.some(i => i.nome.toLowerCase() === nome.toLowerCase())) {
-                    alert("Questo prodotto esiste già in dispensa!"); return;
-                }
-
-                localState.dispensa.push({
-                    nome: nome,
-                    categoria: catSel.value,
-                    stato: 'disponibile' // di default a casa c'è
-                });
-
-                input.value = ''; pushToCloud();
-            }
-        }
-
-        // LOGICA DI AGGANCIO DISPENSA ➔ LISTA SPESA
-        function togglePantryStatus(nome) {
-            triggerHapticFeedback();
-            const idx = localState.dispensa.findIndex(i => i.nome === nome);
-            if (idx !== -1) {
-                const item = localState.dispensa[idx];
-                if (item.stato === 'disponibile') {
-                    item.stato = 'esaurito';
-                    // CICLO AUTOMATICO: Lo inserisce al volo nella lista della spesa
-                    const am = getActiveMarket();
-                    if (!am.items.some(i => i.name.toLowerCase() === nome.toLowerCase() && !i.completed)) {
-                        am.items.push({
-                            id: Date.now(),
-                            name: item.nome,
-                            category: item.categoria,
-                            qty: 1,
-                            price: findEstimatedPriceGlobal(item.nome),
-                            completed: false
-                        });
-                    }
-                } else {
-                    item.stato = 'disponibile';
-                }
-                pushToCloud();
-            }
-        }
-
-        function deletePantryItem(nome) {
-            if(confirm(`Eliminare ${nome} dalla dispensa?`)) {
-                localState.dispensa = localState.dispensa.filter(i => i.nome !== nome); pushToCloud();
-            }
-        }
-
-        // FUNZIONE SVUOTA CARRELLO CON AGGIORNAMENTO INVERSO (SPESA ➔ DISPENSA)
-        function clearCompleted() {
-            triggerHapticFeedback();
-            const activeMarket = getActiveMarket();
-            const itemsComprati = activeMarket.items.filter(item => item.completed);
-            
-            if (itemsComprati.length === 0) return;
-
-            const oggi = new Date();
-            const meseCorrente = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
-            const dataCompleta = oggi.toISOString().split('T')[0];
-
-            if (!localState.storico_spese) { localState.storico_spese = []; }
-            if (!localState.dispensa) { localState.dispensa = []; }
-
-            itemsComprati.forEach(item => {
-                // 1. Salva nello storico spese per i grafici
-                localState.storico_spese.push({
-                    nome: item.name,
-                    prezzo: parseFloat(item.price) || 0,
-                    quantita: parseInt(item.qty) || 1,
-                    categoria: item.category || "Generale",
-                    mercato: localState.currentMarket,
-                    mese: meseCorrente,
-                    data: dataCompleta
-                });
-
-                // 2. CICLO AUTOMATICO INVERSO: se l'oggetto esiste in dispensa ed era "esaurito", ora torna "disponibile"
-                const dispensaIdx = localState.dispensa.findIndex(p => p.nome.toLowerCase() === item.name.toLowerCase());
-                if (dispensaIdx !== -1) {
-                    localState.dispensa[dispensaIdx].stato = 'disponibile';
-                }
-            });
-
-            activeMarket.items = activeMarket.items.filter(item => !item.completed);
-            pushToCloud();
-        }
-
-        function resetAllList() { if (confirm(`Azzerare la lista?`)) { getActiveMarket().items = []; pushToCloud(); } }
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').catch(() => {}); });
-        }
-    </script>
-</body>
-</html>
+                .sort((a, b) => b.count - a
