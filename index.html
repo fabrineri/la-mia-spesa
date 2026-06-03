@@ -6,7 +6,35 @@
     <title>SuperSpesa Pro Cloud 🛒</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B0E14">
-    
+    <!-- Sezione Statistiche e Storico Spese -->
+<div class="stats-container-wrapper">
+    <button id="toggleStatsBtn" onclick="toggleStatsPanel()" class="btn-stats-toggle">
+        📊 Mostra Statistiche Spese
+    </button>
+
+    <div id="statsPanel" class="stats-panel hidden">
+        <h3 class="stats-title">Resoconto Spese</h3>
+        
+        <!-- Totale Mensile in grande -->
+        <div class="total-box">
+            <span class="total-label">Totale Mese Corrente:</span>
+            <span id="currentMonthTotal" class="total-amount">0.00 €</span>
+        </div>
+
+        <hr class="stats-divider">
+
+        <!-- Contenitori dei Grafici -->
+        <div class="chart-container">
+            <h4>Distribuzione per Categoria</h4>
+            <canvas id="categoryChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h4>Andamento Mensile</h4>
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+</div>
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #0F1319 0%, #080A0F 100%);
@@ -180,7 +208,92 @@
         #clearCompletedBtn { background: rgba(0, 229, 255, 0.08); border-color: rgba(0, 229, 255, 0.2); color: var(--neon-blue); }
         #resetAllBtn { background: rgba(255, 49, 49, 0.08); border-color: rgba(255, 49, 49, 0.2); color: var(--neon-red); }
         .delete-cat-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; width: 52px; color: var(--text-muted); cursor: pointer; }
+    .stats-container-wrapper {
+    margin: 15px auto;
+    width: 90%;
+    max-width: 500px;
+}
+
+.btn-stats-toggle {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.btn-stats-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+}
+
+.stats-panel {
+    margin-top: 15px;
+    padding: 20px;
+    background: rgba(15, 22, 36, 0.85);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    backdrop-filter: blur(8px);
+}
+
+.stats-panel.hidden {
+    display: none;
+}
+
+.stats-title {
+    color: #00f2fe;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.total-label {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.total-amount {
+    color: #4facfe;
+    font-size: 22px;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+}
+
+.stats-divider {
+    border: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 15px 0;
+}
+
+.chart-container {
+    margin-top: 20px;
+}
+
+.chart-container h4 {
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
     </style>
+    <!-- Libreria Chart.js per i grafici delle spese -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
