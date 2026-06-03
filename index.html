@@ -537,9 +537,11 @@
         // GENERAZIONE DI UN NUOVO CODICE FAMIGLIA NUOVA
         function createNewFamily() {
             const user = auth.currentUser;
-            if (!user) return;
+            if (!user) { alert("Utente non loggato!"); return; }
             
+            // Genera un codice casuale di 6 lettere/numeri
             const newFamilyId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            
             const initialFamilyState = {
                 currentMarket: "Supermercato Standard",
                 markets: {
@@ -549,12 +551,22 @@
                 dispensa: []
             };
 
+            // Salva i dati della famiglia e associa l'utente
             firestoreDB.collection("familiesData").doc(newFamilyId).set(initialFamilyState)
                 .then(() => {
-                    return firestoreDB.collection("users").doc(user.uid).update({ familyId: newFamilyId });
+                    return firestoreDB.collection("users").doc(user.uid).set({ 
+                        email: user.email, 
+                        familyId: newFamilyId 
+                    }, { merge: true }); // Merge evita di sovrascrivere altri dati del profilo
                 })
                 .then(() => {
-                    window.location.reload();
+                    // Feedback visivo e ricarica pulita della pagina
+                    alert(`✨ Famiglia creata con successo!\nIl tuo codice è: ${newFamilyId}`);
+                    window.location.reload(); 
+                })
+                .catch((error) => {
+                    console.error("Errore creazione famiglia:", error);
+                    alert("Errore durante la creazione della famiglia: " + error.message);
                 });
         }
 
