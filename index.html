@@ -741,52 +741,51 @@
         }
 
         async function clearCompleted() {
-            triggerHapticFeedback();
-            const activeMarket = getActiveMarket();
+    triggerHapticFeedback();
+    const activeMarket = getActiveMarket();
     
-            // 1. Isola i prodotti che hai spuntato (completati)
-            const itemsComprati = activeMarket.items.filter(item => item.completed);
+    // 1. Isola i prodotti che hai spuntato (completati)
+    const itemsComprati = activeMarket.items.filter(item => item.completed);
     
-            if (itemsComprati.length === 0) {
-                alert("Non ci sono prodotti spuntati nel carrello da salvare!");
-                return;
-            }
-
-        // Preparazione delle date per le statistiche (Anno-Mese per i grafici)
-        const oggi = new Date();
-        const meseCorrente = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
-        const dataCompleta = oggi.toISOString().split('T')[0];
-
-        // 2. Salva ogni prodotto spuntato nello storico su Firebase
-        const batchPromises = itemsComprati.map(item => {
-            return firestoreDB.collection("storico_spese").add({
-                nome: item.name,
-                prezzo: parseFloat(item.price) || 0,
-                quantita: parseInt(item.qty) || 1,
-                categoria: item.category || "Generale",
-                mercato: localState.currentMarket,
-                mese: meseCorrente,
-                data: dataCompleta
-            });
-        });
-
-        try {
-            // Aspetta che Firebase abbia salvato tutto lo storico
-            await Promise.all(batchPromises);
-            console.log("Prodotti salvati nello storico con successo!");
-
-            // 3. Ora cancella i prodotti completati dalla lista principale (tiene solo quelli NON completati)
-            activeMarket.items = activeMarket.items.filter(item => !item.completed);
-        
-            // Sincronizza il nuovo stato leggero sul Cloud
-            pushToCloud();
-        
-        } catch (error) {
-            console.error("Errore durante il salvataggio dello storico:", error);
-            alert("Ops! C'è stato un errore nel salvare lo storico su Firebase.");
-        }
+    if (itemsComprati.length === 0) {
+        alert("Non ci sono prodotti spuntati nel carrello da salvare!");
+        return;
     }
 
+    // Preparazione delle date per le statistiche (Anno-Mese per i grafici)
+    const oggi = new Date();
+    const meseCorrente = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
+    const dataCompleta = oggi.toISOString().split('T')[0];
+
+    // 2. Salva ogni prodotto spuntato nello storico su Firebase usando 'db'
+    const batchPromises = itemsComprati.map(item => {
+        return db.collection("storico_spese").add({
+            nome: item.name,
+            prezzo: parseFloat(item.price) || 0,
+            quantita: parseInt(item.qty) || 1,
+            categoria: item.category || "Generale",
+            mercato: localState.currentMarket,
+            mese: meseCorrente,
+            data: dataCompleta
+        });
+    });
+
+    try {
+        // Aspetta che Firebase abbia salvato tutto lo storico
+        await Promise.all(batchPromises);
+        console.log("Prodotti salvati nello storico con successo!");
+
+        // 3. Ora cancella i prodotti completati dalla lista principale
+        activeMarket.items = activeMarket.items.filter(item => !item.completed);
+        
+        // Sincronizza il nuovo stato leggero sul Cloud
+        pushToCloud();
+        
+    } catch (error) {
+        console.error("Errore durante il salvataggio dello storico:", error);
+        alert("Ops! C'è stato un errore nel salvare lo storico su Firebase.");
+    }
+}
         function resetAllList() {
             if (confirm(`Vuoi azzerare la lista?`)) { getActiveMarket().items = []; pushToCloud(); }
         }
