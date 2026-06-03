@@ -107,7 +107,8 @@
             cursor: pointer;
             transition: transform 0.1s;
         }
-        .login-btn:active { transform: scale(0.98); }
+        .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .login-btn:active:not(:disabled) { transform: scale(0.98); }
 
         .login-error {
             color: var(--neon-red);
@@ -115,6 +116,10 @@
             margin-top: 14px;
             display: none;
             line-height: 1.4;
+            background: rgba(255, 49, 49, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 49, 49, 0.2);
         }
 
         .logout-header-btn {
@@ -247,10 +252,10 @@
 
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
-            <div class="login-title">SuperSpesa Cloud 🔒</div>
+            <div class="login-title">SpesaPro Cloud 🔒</div>
             <input type="text" id="loginEmail" class="login-input" placeholder="Indirizzo Email" autocomplete="email">
             <input type="password" id="loginPassword" class="login-input" placeholder="Password">
-            <button class="login-btn" onclick="handleLogin()">Accedi</button>
+            <button class="login-btn" id="loginBtnElement" onclick="handleLogin()">Accedi</button>
             <div id="loginError" class="login-error"></div>
         </div>
     </div>
@@ -409,18 +414,21 @@
         let chartMonthlyInstance = null;
         let currentPantryFilter = 'all';
 
-        // ACCESSO E AGGANCIO UTENTE
+        // ACCESSO E AGGANCIO UTENTE (MIGLIORATO PER EVITARE BLOCCHI SILENZIOSI)
         auth.onAuthStateChanged((user) => {
             const loginOverlay = document.getElementById('loginOverlay');
             const appContainer = document.getElementById('appContainer');
+            const loginBtn = document.getElementById('loginBtnElement');
 
             if (user) {
                 loginOverlay.style.display = 'none';
                 appContainer.style.display = 'block';
+                if (loginBtn) loginBtn.disabled = false;
                 startRealtimeSync();
             } else {
                 loginOverlay.style.display = 'flex';
                 appContainer.style.display = 'none';
+                if (loginBtn) loginBtn.disabled = false;
                 if (databaseListener) { databaseListener(); databaseListener = null; }
             }
         });
@@ -429,6 +437,8 @@
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             const errorDiv = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtnElement');
+            
             errorDiv.style.display = 'none';
 
             if (!email || !password) {
@@ -437,8 +447,12 @@
                 return;
             }
 
+            // Evita doppi click bloccando momentaneamente il tasto
+            loginBtn.disabled = true;
+
             auth.signInWithEmailAndPassword(email, password)
                 .catch((error) => {
+                    loginBtn.disabled = false;
                     errorDiv.style.display = 'block';
                     if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
                         errorDiv.innerText = "❌ Email o password errata.";
@@ -474,6 +488,9 @@
         };
 
         function startRealtimeSync() {
+            // Se esiste già un listener attivo, lo puliamo prima di ricrearlo
+            if (databaseListener) databaseListener();
+
             databaseListener = docRef.onSnapshot((doc) => {
                 if (doc.exists) {
                     localState = doc.data();
@@ -489,7 +506,17 @@
                 renderFrequentChips();
                 if(document.getElementById('statsPanel').classList.contains('open')) { buildCharts(); }
             }, (error) => {
+                // SE IL DATABASE DA ERRORE (ES: REGOLE DI SICUREZZA DI FIREBASE BLOCCATE) LO COMBATTIAMO A SCHERMO
                 console.error("Errore Realtime Cloud:", error);
+                const errorDiv = document.getElementById('loginError');
+                const loginOverlay = document.getElementById('loginOverlay');
+                const appContainer = document.getElementById('appContainer');
+                
+                auth.signOut(); // Scolleghiamo forzatamente l'utente per rimetterlo in login
+                loginOverlay.style.display = 'flex';
+                appContainer.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorDiv.innerText = "⚠️ Errore Database: Permessi di scrittura/lettura Cloud negati. Controlla le regole (Rules) su Firebase Console.";
             });
         }
 
@@ -675,4 +702,304 @@
             const sortedHistory = Object.keys(history)
                 .map(name => ({ name: name, ...history[name] }))
                 .filter(item => activeCategories.includes(item.category))
-                .sort((a, b) => b.count - a
+                .sort((a, b) => b.count - a.count).slice(0, 5);
+
+            if (sortedHistory.length > 0) {
+                zone.style.display = 'block'; container.innerHTML = '';
+                sortedHistory.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.className = 'frequent-chip'; btn.innerText = `+ ${item.name}`;
+                    btn.onclick = () => {
+                        triggerHapticFeedback();
+                        getActiveMarket().items.push({ id: Date.now(), name: item.name, category: item.category, qty: 1, price: findEstimatedPriceGlobal(item.name), completed: false });
+                        pushToCloud();
+                    };
+                    container.appendChild(btn);
+                });
+            } else { zone.style.display = 'none'; }
+        }
+
+        function updateMarketSelectorUI() {
+            const select = document.getElementById('marketSelect'); select.innerHTML = '';
+            Object.keys(localState.markets).forEach(mName => {
+                const opt = document.createElement('option'); opt.value = mName; opt.innerText = mName;
+                if(mName === localState.currentMarket) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function changeMarket() { localState.currentMarket = document.getElementById('marketSelect').value; pushToCloud(); }
+        function addMarket() {
+            const input = document.getElementById('newMarketInput'); const name = input.value.trim();
+            if (name && !localState.markets[name]) {
+                localState.markets[name] = { categories: [...defaultCategories], items: [], history: {} };
+                localState.currentMarket = name; input.value = ''; pushToCloud();
+            }
+        }
+        function deleteMarket() {
+            if (Object.keys(localState.markets).length <= 1) return;
+            if (confirm(`Eliminare ${localState.currentMarket}?`)) {
+                delete localState.markets[localState.currentMarket];
+                localState.currentMarket = Object.keys(localState.markets)[0]; pushToCloud();
+            }
+        }
+
+        function toggleCatManager() {
+            const content = document.getElementById('catContent'); const sign = document.getElementById('panelsign');
+            content.classList.toggle('open'); sign.innerText = content.classList.contains('open') ? "▼" : "▶";
+        }
+
+        function updateCategoryUI() {
+            const select = document.getElementById('categoryInput');
+            const pantrySelect = document.getElementById('pantryCategoryInput');
+            const catListElement = document.getElementById('customCatList');
+            const currentCatList = getActiveMarket().categories;
+            const currentItems = getActiveMarket().items || [];
+            
+            select.innerHTML = '';
+            currentCatList.forEach(cat => {
+                const opt = document.createElement('option'); opt.value = cat; opt.innerText = cat; select.appendChild(opt);
+            });
+
+            pantrySelect.innerHTML = '';
+            currentCatList.forEach(cat => {
+                const opt = document.createElement('option'); opt.value = cat; opt.innerText = cat; pantrySelect.appendChild(opt);
+            });
+
+            catListElement.innerHTML = '';
+            currentCatList.forEach((cat, index) => {
+                const li = document.createElement('li');
+                const count = currentItems.filter(item => item.category === cat).length;
+                li.className = count > 0 ? 'cat-chip has-items' : 'cat-chip';
+                li.innerHTML = `
+                    <div><span>${cat}</span>${count > 0 ? `<span class="cat-badge">${count}</span>` : ''}</div>
+                    <div class="cat-actions">
+                        <button class="move-btn" onclick="moveCategory(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
+                        <button class="move-btn" onclick="moveCategory(${index}, 1)" ${index === currentCatList.length - 1 ? 'disabled' : ''}>▼</button>
+                        <button class="delete-cat-btn" style="border:none; background:none;" onclick="deleteCategory(${index})">×</button>
+                    </div>`;
+                catListElement.appendChild(li);
+            });
+        }
+
+        function moveCategory(index, dir) {
+            const list = getActiveMarket().categories; [list[index], list[index + dir]] = [list[index + dir], list[index]]; pushToCloud();
+        }
+        function addCategory() {
+            const text = document.getElementById('newCatInput').value.trim();
+            if (text && !getActiveMarket().categories.includes(text)) {
+                getActiveMarket().categories.push(text); document.getElementById('newCatInput').value = ''; pushToCloud();
+            }
+        }
+        function deleteCategory(index) { getActiveMarket().categories.splice(index, 1); pushToCloud(); }
+
+        function renderList() {
+            const container = document.getElementById('shoppingListContainer'); container.innerHTML = '';
+            const activeMarket = getActiveMarket();
+            let estTotal = 0, cartTotal = 0;
+            let totalItems = activeMarket.items.length;
+            let compItems = activeMarket.items.filter(i => i.completed).length;
+
+            const progressZone = document.getElementById('progressZone');
+            if (totalItems > 0) {
+                progressZone.style.display = 'block';
+                let pct = Math.round((compItems / totalItems) * 100);
+                document.getElementById('progressBar').style.width = `${pct}%`;
+                document.getElementById('progressLabel').innerText = `${compItems} / ${totalItems} nel carrello (${pct}%)`;
+            } else { progressZone.style.display = 'none'; }
+
+            activeMarket.categories.forEach(reparto => {
+                const prodotti = activeMarket.items.filter(item => item.category === reparto);
+                if (prodotti.length > 0) {
+                    const header = document.createElement('div'); header.className = 'category-header'; header.innerText = reparto; container.appendChild(header);
+                    const ul = document.createElement('ul'); ul.className = 'product-list';
+                    
+                    prodotti.forEach(item => {
+                        const li = document.createElement('li'); li.className = 'product-item';
+                        if (item.completed) li.classList.add('completed');
+                        const cost = item.qty * item.price; estTotal += cost; if (item.completed) cartTotal += cost;
+
+                        li.innerHTML = `
+                            <button class="check-btn" onclick="toggleItem(${item.id})"></button>
+                            <span class="item-text" onclick="toggleItem(${item.id})">${item.name}</span>
+                            <span class="item-details">x${item.qty} ${item.price > 0 ? `(${item.price.toFixed(2)}€)` : ''}</span>
+                            <button class="delete-btn" onclick="deleteItem(${item.id})">🗑️</button>
+                        `;
+                        ul.appendChild(li);
+                    });
+                    container.appendChild(ul);
+                }
+            });
+
+            const dbd = document.getElementById('budgetDashboard');
+            if (activeMarket.items.length > 0) {
+                dbd.style.display = 'block';
+                document.getElementById('estimatedTotal').innerText = `${estTotal.toFixed(2)} €`;
+                document.getElementById('cartTotal').innerText = `${cartTotal.toFixed(2)} €`;
+            } else { dbd.style.display = 'none'; }
+
+            document.getElementById('clearCompletedBtn').style.opacity = compItems > 0 ? '1' : '0.2';
+            document.getElementById('clearCompletedBtn').style.pointerEvents = compItems > 0 ? 'auto' : 'none';
+            document.getElementById('resetAllBtn').style.opacity = totalItems > 0 ? '1' : '0.2';
+            document.getElementById('resetAllBtn').style.pointerEvents = totalItems > 0 ? 'auto' : 'none';
+        }
+
+        function addItem() {
+            const input = document.getElementById('itemInput'); const catSel = document.getElementById('categoryInput');
+            const qtyIn = document.getElementById('qtyInput'); const prIn = document.getElementById('priceInput');
+            const text = input.value.trim(); const qty = parseInt(qtyIn.value) || 1; const price = parseFloat(prIn.value) || 0;
+            
+            if (text && catSel.value) {
+                triggerHapticFeedback(); const am = getActiveMarket();
+                if (!am.history) am.history = {};
+                if (!am.history[text]) am.history[text] = { category: catSel.value, count: 0, price: price };
+                am.history[text].count += 1; if(price > 0) am.history[text].price = price;
+
+                am.items.push({ id: Date.now(), name: text, category: catSel.value, qty: qty, price: price, completed: false });
+                input.value = ''; qtyIn.value = '1'; prIn.value = ''; pushToCloud();
+            }
+        }
+
+        function toggleItem(id) {
+            triggerHapticFeedback(); const items = getActiveMarket().items;
+            const idx = items.findIndex(i => i.id === id);
+            if (idx !== -1) { items[idx].completed = !items[idx].completed; pushToCloud(); }
+        }
+        function deleteItem(id) {
+            const items = getActiveMarket().items;
+            const idx = items.findIndex(i => i.id === id);
+            if (idx !== -1) { items.splice(idx, 1); pushToCloud(); }
+        }
+
+        function renderPantry() {
+            const container = document.getElementById('pantryListContainer'); if(!container) return;
+            container.innerHTML = '';
+            const pantryItems = localState.dispensa || [];
+            const activeMarket = getActiveMarket();
+
+            activeMarket.categories.forEach(reparto => {
+                let prodottiCat = pantryItems.filter(item => item.categoria === reparto);
+                
+                if (currentPantryFilter === 'missing') {
+                    prodottiCat = prodottiCat.filter(item => item.stato === 'esaurito');
+                }
+
+                if (prodottiCat.length > 0) {
+                    const header = document.createElement('div'); header.className = 'category-header'; header.innerText = reparto; container.appendChild(header);
+                    const ul = document.createElement('ul'); ul.className = 'product-list';
+                    
+                    prodottiCat.forEach(item => {
+                        const li = document.createElement('li'); li.className = 'product-item';
+                        const isStocked = item.stato === 'disponibile';
+
+                        li.innerHTML = `
+                            <span class="item-text" style="margin-left:6px; font-weight:500;">${item.nome}</span>
+                            <button class="pantry-status-btn ${isStocked ? 'stocked' : 'empty'}" onclick="togglePantryStatus('${item.nome}')">
+                                ${isStocked ? '🟢 Disponibile' : '🔴 Finito! Compra'}
+                            </button>
+                            <button class="delete-btn" style="margin-left: 14px;" onclick="deletePantryItem('${item.nome}')">🗑️</button>
+                        `;
+                        ul.appendChild(li);
+                    });
+                    container.appendChild(ul);
+                }
+            });
+        }
+
+        function addPantryItem() {
+            const input = document.getElementById('pantryItemInput');
+            const catSel = document.getElementById('pantryCategoryInput');
+            const nome = input.value.trim();
+
+            if (nome && catSel.value) {
+                triggerHapticFeedback();
+                if (!localState.dispensa) localState.dispensa = [];
+                
+                if (localState.dispensa.some(i => i.nome.toLowerCase() === nome.toLowerCase())) {
+                    alert("Questo prodotto esiste già in dispensa!"); return;
+                }
+
+                localState.dispensa.push({
+                    nome: nome,
+                    categoria: catSel.value,
+                    stato: 'disponibile'
+                });
+
+                input.value = ''; pushToCloud();
+            }
+        }
+
+        function togglePantryStatus(nome) {
+            triggerHapticFeedback();
+            const idx = localState.dispensa.findIndex(i => i.nome === nome);
+            if (idx !== -1) {
+                const item = localState.dispensa[idx];
+                if (item.stato === 'disponibile') {
+                    item.stato = 'esaurito';
+                    const am = getActiveMarket();
+                    if (!am.items.some(i => i.name.toLowerCase() === nome.toLowerCase() && !i.completed)) {
+                        am.items.push({
+                            id: Date.now(),
+                            name: item.nome,
+                            category: item.categoria,
+                            qty: 1,
+                            price: findEstimatedPriceGlobal(item.nome),
+                            completed: false
+                        });
+                    }
+                } else {
+                    item.stato = 'disponibile';
+                }
+                pushToCloud();
+            }
+        }
+
+        function deletePantryItem(nome) {
+            if(confirm(`Eliminare ${nome} dalla dispensa?`)) {
+                localState.dispensa = localState.dispensa.filter(i => i.nome !== nome); pushToCloud();
+            }
+        }
+
+        function clearCompleted() {
+            triggerHapticFeedback();
+            const activeMarket = getActiveMarket();
+            const itemsComprati = activeMarket.items.filter(item => item.completed);
+            
+            if (itemsComprati.length === 0) return;
+
+            const oggi = new Date();
+            const meseCorrente = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
+            const dataCompleta = oggi.toISOString().split('T')[0];
+
+            if (!localState.storico_spese) { localState.storico_spese = []; }
+            if (!localState.dispensa) { localState.dispensa = []; }
+
+            itemsComprati.forEach(item => {
+                localState.storico_spese.push({
+                    nome: item.name,
+                    prezzo: parseFloat(item.price) || 0,
+                    quantita: parseInt(item.qty) || 1,
+                    categoria: item.category || "Generale",
+                    mercato: localState.currentMarket,
+                    mese: meseCorrente,
+                    data: dataCompleta
+                });
+
+                const dispensaIdx = localState.dispensa.findIndex(p => p.nome.toLowerCase() === item.name.toLowerCase());
+                if (dispensaIdx !== -1) {
+                    localState.dispensa[dispensaIdx].stato = 'disponibile';
+                }
+            });
+
+            activeMarket.items = activeMarket.items.filter(item => !item.completed);
+            pushToCloud();
+        }
+
+        function resetAllList() { if (confirm(`Azzerare la lista?`)) { getActiveMarket().items = []; pushToCloud(); } }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').catch(() => {}); });
+        }
+    </script>
+</body>
+</html>
