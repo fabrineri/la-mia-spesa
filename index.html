@@ -740,11 +740,11 @@
             if (index !== -1) { activeItems.splice(index, 1); pushToCloud(); }
         }
 
-async function clearCompleted() {
+function clearCompleted() {
     triggerHapticFeedback();
     const activeMarket = getActiveMarket();
     
-    // 1. Isola i prodotti che hai spuntato (completati)
+    // 1. Isola i prodotti spuntati
     const itemsComprati = activeMarket.items.filter(item => item.completed);
     
     if (itemsComprati.length === 0) {
@@ -757,36 +757,28 @@ async function clearCompleted() {
     const meseCorrente = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
     const dataCompleta = oggi.toISOString().split('T')[0];
 
-    try {
-        // Usa il riferimento nativo e sicuro di Firebase configurato nella tua app
-        const firestoreInstance = firebase.firestore();
-
-        // 2. Salva ogni prodotto spuntato nello storico su Firebase
-        const batchPromises = itemsComprati.map(item => {
-            return firestoreInstance.collection("storico_spese").add({
-                nome: item.name,
-                prezzo: parseFloat(item.price) || 0,
-                quantita: parseInt(item.qty) || 1,
-                categoria: item.category || "Generale",
-                mercato: localState.currentMarket,
-                mese: meseCorrente,
-                data: dataCompleta
-            });
-        });
-
-        // Aspetta il salvataggio dello storico
-        await Promise.all(batchPromises);
-        console.log("Prodotti archiviati con successo!");
-
-    } catch (error) {
-        // Se Firebase fallisce, lo logghiamo ma lasciamo comunque svuotare il carrello locale
-        console.error("Errore Firebase storico (ma procedo con la pulizia):", error);
+    // 2. Se non esiste una sezione storico nel nostro stato locale, creiamola al volo
+    if (!localState.storico_spese) {
+        localState.storico_spese = [];
     }
 
-    // 3. Rimuovi i prodotti completati dalla schermata (questo DEVE funzionare sempre)
+    // 3. Sposta i prodotti dentro lo storico locale con prezzo e data
+    itemsComprati.forEach(item => {
+        localState.storico_spese.push({
+            nome: item.name,
+            prezzo: parseFloat(item.price) || 0,
+            quantita: parseInt(item.qty) || 1,
+            categoria: item.category || "Generale",
+            mercato: localState.currentMarket,
+            mese: meseCorrente,
+            data: dataCompleta
+        });
+    });
+
+    // 4. Cancella i prodotti completati dalla lista attiva
     activeMarket.items = activeMarket.items.filter(item => !item.completed);
     
-    // Sincronizza il nuovo stato sul Cloud
+    // 5. Sincronizza TUTTO su Firebase (lista svuotata + storico salvato insieme!)
     pushToCloud();
 }
         function resetAllList() {
