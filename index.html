@@ -975,6 +975,7 @@
             if (!localState.dispensa) { localState.dispensa = []; }
 
             itemsComprati.forEach(item => {
+                // 1. Salva nello storico spese per i grafici
                 localState.storico_spese.push({
                     nome: item.name,
                     prezzo: parseFloat(item.price) || 0,
@@ -985,12 +986,23 @@
                     data: dataCompleta
                 });
 
+                // 2. Gestione Dispensa Automatica
                 const dispensaIdx = localState.dispensa.findIndex(p => p.nome.toLowerCase() === item.name.toLowerCase());
+                
                 if (dispensaIdx !== -1) {
+                    // Se il prodotto esiste già in dispensa, lo rimette semplicemente come "disponibile"
                     localState.dispensa[dispensaIdx].stato = 'disponibile';
+                } else {
+                    // SE IL PRODOTTO NON ESISTE, LO CREA AUTOMATICAMENTE!
+                    localState.dispensa.push({
+                        nome: item.name,
+                        categoria: item.category || "Generale",
+                        stato: 'disponibile'
+                    });
                 }
             });
 
+            // Rimuove gli articoli completati dal carrello
             activeMarket.items = activeMarket.items.filter(item => !item.completed);
             pushToCloud();
         }
