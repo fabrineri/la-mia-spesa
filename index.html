@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B0E14">
     
+    <!-- Libreria Chart.js per i grafici -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -20,6 +21,7 @@
             --neon-purple: #9D4EDD;
             --neon-green: #39FF14;
             --neon-red: #FF3131;
+            --neon-amber: #FF9F43;
         }
 
         body {
@@ -37,7 +39,7 @@
         .container {
             width: 100%;
             max-width: 480px;
-            margin-bottom: 40px;
+            margin-bottom: 80px; /* Spazio extra per non coprire il menu inferiore */
             display: none; /* Nascosta finché non viene fatto il login */
         }
 
@@ -137,7 +139,18 @@
         .glass-panel { background: var(--panel-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--panel-border); border-radius: 24px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
         .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; color: var(--neon-blue); margin-bottom: 10px; }
         
-        /* INCOLLONAMENTO SEZIONE STATISTICHE */
+        /* SEZIONE APP SCHEDE (PANNELLI SPESA / DISPENSA) */
+        .app-view { display: none; }
+        .app-view.active { display: block; }
+
+        /* NAVIGAZIONE INFERIORE CORRETTA STILE APPLE */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 68px; background: rgba(15, 20, 30, 0.9); border-top: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; align-items: center; z-index: 99999; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s ease; font-size: 11px; font-weight: 600; }
+        .nav-item .nav-icon { font-size: 20px; transition: transform 0.2s; }
+        .nav-item.active { color: var(--neon-blue); text-shadow: 0 0 10px rgba(0,229,255,0.2); }
+        .nav-item.active .nav-icon { transform: scale(1.15); }
+
+        /* STATISTICHE INCOLLONAMENTO */
         .stats-wrapper { margin-bottom: 16px; width: 100%; box-sizing: border-box; }
         .stats-toggle-btn { width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-muted); border-radius: 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-align: center; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .stats-toggle-btn:hover { background: rgba(255, 255, 255, 0.06); color: white; border-color: var(--neon-blue); }
@@ -153,8 +166,8 @@
         .input-group { display: flex; gap: 10px; margin-bottom: 12px; position: relative; }
         input[type="text"], input[type="number"], select { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 14px; font-size: 16px; color: white; outline: none; box-sizing: border-box; transition: all 0.3s ease; }
         input:focus, select:focus { border-color: var(--neon-blue); background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 15px rgba(0, 229, 255, 0.2); }
-        #itemInput { flex: 2; min-width: 120px; }
-        #categoryInput { flex: 1.3; min-width: 110px; background-color: #161C26; }
+        #itemInput, #pantryItemInput { flex: 2; min-width: 120px; }
+        #categoryInput, #pantryCategoryInput { flex: 1.3; min-width: 110px; background-color: #161C26; }
         #qtyInput { width: 75px; text-align: center; }
         #priceInput { width: 95px; }
         
@@ -170,17 +183,7 @@
         .frequent-chips-container { display: flex; gap: 8px; flex-wrap: wrap; }
         .frequent-chip { background: rgba(157, 78, 221, 0.12); color: #D6A4FF; border: 1px solid rgba(157, 78, 221, 0.2); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
         
-        .category-manager-title { font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .category-manager-content { display: none; margin-top: 14px; }
-        .category-manager-content.open { display: block; }
-        .cat-list { display: flex; flex-direction: column; gap: 8px; padding: 0; list-style: none; }
-        .cat-chip { background: rgba(255, 255, 255, 0.02); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .cat-chip.has-items { border-color: rgba(0, 229, 255, 0.3); background: rgba(0, 229, 255, 0.03); }
-        .cat-badge { font-size: 10px; font-weight: bold; background: var(--neon-blue); color: #000; padding: 2px 6px; border-radius: 6px; }
-        .cat-actions { display: flex; gap: 14px; align-items: center; }
-        .move-btn { background: none; border: none; color: var(--neon-blue); cursor: pointer; }
-        .move-btn:disabled { color: #3A4454; }
-        
+        /* REPARTI E LISTE */
         .category-header { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--neon-blue); margin: 24px 0 8px 6px; }
         .product-list { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 4px 14px; margin-bottom: 12px; list-style: none; }
         li.product-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
@@ -188,12 +191,24 @@
         
         .item-text { flex: 1; font-size: 16px; margin-left: 14px; cursor: pointer; }
         .item-details { font-size: 13px; color: var(--text-muted); margin-right: 12px; }
+        
+        /* BOTTONI SPUNTATO LISTA */
         .check-btn { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%; width: 26px; height: 26px; cursor: pointer; }
         .completed .check-btn { background: var(--neon-green); border-color: var(--neon-green); }
         .completed .check-btn::after { content: "✓"; color: #000; font-size: 15px; font-weight: 900; display: block; text-align: center; line-height: 22px; }
         .completed .item-text { text-decoration: line-through; color: var(--text-muted); }
         .delete-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; }
+
+        /* INTERFACCIA STATUS DISPENSA (INTERRUTTORI APPOSITI) */
+        .pantry-status-btn { padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
+        .pantry-status-btn.stocked { background: rgba(57, 255, 20, 0.08); border-color: rgba(57, 255, 20, 0.3); color: var(--neon-green); }
+        .pantry-status-btn.empty { background: rgba(255, 49, 49, 0.1); border-color: rgba(255, 49, 49, 0.3); color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 49, 49, 0.1); }
         
+        .pantry-filters { display: flex; gap: 10px; margin-bottom: 16px; }
+        .filter-chip { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 12px; color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
+        .filter-chip.active { background: rgba(157, 78, 221, 0.15); border-color: var(--neon-purple); color: white; }
+
+        /* BUDGET E AZIONI */
         .budget-dashboard { background: linear-gradient(135deg, rgba(22, 28, 38, 0.95), rgba(12, 16, 24, 0.95)); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; padding: 16px; margin-top: 24px; display: none; }
         .budget-row { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 8px; color: var(--text-muted); }
         .budget-row.total-highlight { font-size: 18px; font-weight: 700; color: white; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; margin-top: 10px; }
@@ -204,10 +219,22 @@
         #clearCompletedBtn { background: rgba(0, 229, 255, 0.08); border-color: rgba(0, 229, 255, 0.2); color: var(--neon-blue); }
         #resetAllBtn { background: rgba(255, 49, 49, 0.08); border-color: rgba(255, 49, 49, 0.2); color: var(--neon-red); }
         .delete-cat-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; width: 52px; color: var(--text-muted); cursor: pointer; }
+        
+        .category-manager-title { font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .category-manager-content { display: none; margin-top: 14px; }
+        .category-manager-content.open { display: block; }
+        .cat-list { display: flex; flex-direction: column; gap: 8px; padding: 0; list-style: none; }
+        .cat-chip { background: rgba(255, 255, 255, 0.02); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .cat-chip.has-items { border-color: rgba(0, 229, 255, 0.3); background: rgba(0, 229, 255, 0.03); }
+        .cat-badge { font-size: 10px; font-weight: bold; background: var(--neon-blue); color: #000; padding: 2px 6px; border-radius: 6px; }
+        .cat-actions { display: flex; gap: 14px; align-items: center; }
+        .move-btn { background: none; border: none; color: var(--neon-blue); cursor: pointer; }
+        .move-btn:disabled { color: #3A4454; }
     </style>
 </head>
 <body>
 
+    <!-- OVERLAY DI ACCESSO -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
             <div class="login-title">SuperSpesa Cloud 🔒</div>
@@ -218,104 +245,151 @@
         </div>
     </div>
 
+    <!-- CONTENITORE APPLICAZIONE -->
     <div class="container" id="appContainer">
         <h1>SuperSpesa Pro Cloud 🛒</h1>
         <button class="logout-header-btn" onclick="handleLogout()">Esci 🚪</button>
         
-        <div class="progress-container" id="progressZone">
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progressBar"></div>
-            </div>
-            <div class="progress-text" id="progressLabel">0 / 0 prodotti nel carrello (0%)</div>
-        </div>
-        
-        <div class="stats-wrapper">
-            <button class="stats-toggle-btn" onclick="toggleStatsPanel()">
-                <span>📊</span> <span id="statsBtnText">Mostra Statistiche Spese</span>
-            </button>
-            <div id="statsPanel" class="stats-panel-content">
-                <div class="stats-row-total">
-                    <span class="stats-total-title">Totale Mese Corrente:</span>
-                    <span id="currentMonthTotal" class="stats-total-value">0.00 €</span>
+        <!-- VISTA SPESA (SCHEDA 1) -->
+        <div id="viewShopping" class="app-view active">
+            <div class="progress-container" id="progressZone">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBar"></div>
                 </div>
-                <div class="chart-box">
-                    <h4>Distribuzione per Reparto</h4>
-                    <canvas id="categoryChart" style="max-height: 230px;"></canvas>
-                </div>
-                <div class="chart-box" style="margin-bottom: 0;">
-                    <h4>Andamento Mensile</h4>
-                    <canvas id="monthlyChart" style="max-height: 180px;"></canvas>
-                </div>
-            </div>
-        </div>
-        
-        <div class="glass-panel">
-            <div class="section-title">Supermercato Corrente</div>
-            <div class="input-group" style="margin-bottom: 0;">
-                <select id="marketSelect" style="flex: 1;" onchange="changeMarket()"></select>
-                <button class="delete-cat-btn" onclick="deleteMarket()">🗑️</button>
+                <div class="progress-text" id="progressLabel">0 / 0 prodotti nel carrello (0%)</div>
             </div>
             
-            <div class="section-title" style="margin-top: 16px; margin-bottom: 8px;">Nuovo Negozio</div>
-            <div class="input-group" style="margin-bottom: 0;">
-                <input type="text" id="newMarketInput" style="flex: 1;" placeholder="Es: Esselunga, Conad...">
-                <button class="add-btn" style="background: linear-gradient(135deg, var(--neon-green), #22C55E);" onclick="addMarket()">+</button>
-            </div>
-        </div>
-        
-        <div class="glass-panel" style="padding: 16px 20px;">
-            <div class="category-manager-title" onclick="toggleCatManager()">
-                <span style="color: #9D4EDD; font-weight: 700;">⚙️ Configura Ordine Corsie</span>
-                <span id="panelsign" style="color: var(--text-muted);">▶</span>
-            </div>
-            <div class="category-manager-content" id="catContent">
-                <div class="input-group" style="margin-top: 10px; margin-bottom: 0;">
-                    <input type="text" id="newCatInput" style="flex: 1;" placeholder="Nuovo reparto...">
-                    <button class="add-btn" style="background: linear-gradient(135deg, var(--neon-purple), #7B2CBF); color: white;" onclick="addCategory()">+</button>
+            <!-- SEZIONE REPORT -->
+            <div class="stats-wrapper">
+                <button class="stats-toggle-btn" onclick="toggleStatsPanel()">
+                    <span>📊</span> <span id="statsBtnText">Mostra Statistiche Spese</span>
+                </button>
+                <div id="statsPanel" class="stats-panel-content">
+                    <div class="stats-row-total">
+                        <span class="stats-total-title">Totale Mese Corrente:</span>
+                        <span id="currentMonthTotal" class="stats-total-value">0.00 €</span>
+                    </div>
+                    <div class="chart-box">
+                        <h4>Distribuzione per Reparto</h4>
+                        <canvas id="categoryChart" style="max-height: 230px;"></canvas>
+                    </div>
+                    <div class="chart-box" style="margin-bottom: 0;">
+                        <h4>Andamento Mensile</h4>
+                        <canvas id="monthlyChart" style="max-height: 180px;"></canvas>
+                    </div>
                 </div>
-                <ul class="cat-list" id="customCatList"></ul>
+            </div>
+            
+            <!-- SELEZIONE SUPERMERCATO -->
+            <div class="glass-panel">
+                <div class="section-title">Supermercato Corrente</div>
+                <div class="input-group" style="margin-bottom: 0;">
+                    <select id="marketSelect" style="flex: 1;" onchange="changeMarket()"></select>
+                    <button class="delete-cat-btn" onclick="deleteMarket()">🗑️</button>
+                </div>
+                
+                <div class="section-title" style="margin-top: 16px; margin-bottom: 8px;">Nuovo Negozio</div>
+                <div class="input-group" style="margin-bottom: 0;">
+                    <input type="text" id="newMarketInput" style="flex: 1;" placeholder="Es: Esselunga, Conad...">
+                    <button class="add-btn" style="background: linear-gradient(135deg, var(--neon-green), #22C55E);" onclick="addMarket()">+</button>
+                </div>
+            </div>
+            
+            <!-- GESTIONE CORSIE -->
+            <div class="glass-panel" style="padding: 16px 20px;">
+                <div class="category-manager-title" onclick="toggleCatManager()">
+                    <span style="color: #9D4EDD; font-weight: 700;">⚙️ Configura Ordine Corsie</span>
+                    <span id="panelsign" style="color: var(--text-muted);">▶</span>
+                </div>
+                <div class="category-manager-content" id="catContent">
+                    <div class="input-group" style="margin-top: 10px; margin-bottom: 0;">
+                        <input type="text" id="newCatInput" style="flex: 1;" placeholder="Nuovo reparto...">
+                        <button class="add-btn" style="background: linear-gradient(135deg, var(--neon-purple), #7B2CBF); color: white;" onclick="addCategory()">+</button>
+                    </div>
+                    <ul class="cat-list" id="customCatList"></ul>
+                </div>
+            </div>
+
+            <!-- INPUT PRODOTTO -->
+            <div class="glass-panel">
+                <div class="section-title">Aggiungi Prodotto in Lista</div>
+                <div class="input-group">
+                    <input type="text" id="itemInput" placeholder="Cosa ti serve?" autocomplete="off" autocorrect="off" spellcheck="false">
+                    <button id="voiceBtn" class="voice-btn" onclick="startVoiceRecognition('itemInput')">🎙️</button>
+                    <select id="categoryInput"></select>
+                    <div id="autocompleteList" class="autocomplete-suggestions"></div>
+                </div>
+                <div class="input-group" style="margin-bottom: 0;">
+                    <input type="number" id="qtyInput" placeholder="Qtà" min="1" value="1">
+                    <input type="number" id="priceInput" placeholder="Prezzo (€)" min="0" step="0.01">
+                    <button class="add-btn" style="flex: 1;" onclick="addItem()">+</button>
+                </div>
+            </div>
+
+            <!-- PIÙ COMPRATI -->
+            <div class="frequent-products-zone" id="frequentZone" style="display: none; margin: 0 6px 16px 6px;">
+                <div class="section-title" style="color: #9D4EDD;">⭐ Comprati Spesso:</div>
+                <div class="frequent-chips-container" id="frequentChips"></div>
+            </div>
+
+            <!-- CONTENITORE EFFETTIVO DELLE LISTE -->
+            <div id="shoppingListContainer"></div>
+
+            <!-- DASHBOARD BUDGET -->
+            <div class="budget-dashboard" id="budgetDashboard">
+                <div class="budget-row">
+                    <span>Totale stimato lista:</span>
+                    <span style="color: white; font-weight: 500;" id="estimatedTotal">0.00 €</span>
+                </div>
+                <div class="budget-row total-highlight">
+                    <span>Nel Carrello:</span>
+                    <span class="success-text" id="cartTotal">0.00 €</span>
+                </div>
+            </div>
+
+            <div class="action-buttons-container">
+                <button id="clearCompletedBtn" class="clear-btn" onclick="clearCompleted()">Svuota Carrello 🧹</button>
+                <button id="resetAllBtn" class="clear-btn" onclick="resetAllList()">Azzera Lista 🗑️</button>
             </div>
         </div>
 
-        <div class="glass-panel">
-            <div class="section-title">Aggiungi Prodotto</div>
-            <div class="input-group">
-                <input type="text" id="itemInput" placeholder="Cosa ti serve?" autocomplete="off" autocorrect="off" spellcheck="false">
-                <button id="voiceBtn" class="voice-btn" onclick="startVoiceRecognition()">🎙️</button>
-                <select id="categoryInput"></select>
-                <div id="autocompleteList" class="autocomplete-suggestions"></div>
+        <!-- VISTA DISPENSA (SCHEDA 2 - NUOVA) -->
+        <div id="viewPantry" class="app-view">
+            <!-- FILTRI DISPENSA -->
+            <div class="pantry-filters">
+                <div id="filterPantryAll" class="filter-chip active" onclick="setPantryFilter('all')">Tutta la Dispensa</div>
+                <div id="filterPantryMissing" class="filter-chip" onclick="setPantryFilter('missing')">🔴 Cose Finite</div>
             </div>
-            <div class="input-group" style="margin-bottom: 0;">
-                <input type="number" id="qtyInput" placeholder="Qtà" min="1" value="1">
-                <input type="number" id="priceInput" placeholder="Prezzo (€)" min="0" step="0.01">
-                <button class="add-btn" style="flex: 1;" onclick="addItem()">+</button>
+
+            <!-- AGGIUNGI IN DISPENSA -->
+            <div class="glass-panel">
+                <div class="section-title">Aggiungi Elemento in Dispensa</div>
+                <div class="input-group" style="margin-bottom: 0;">
+                    <input type="text" id="pantryItemInput" placeholder="Es: Olio, Caffè, Sale..." autocomplete="off">
+                    <button id="pantryVoiceBtn" class="voice-btn" onclick="startVoiceRecognition('pantryItemInput')">🎙️</button>
+                    <select id="pantryCategoryInput"></select>
+                    <button class="add-btn" style="background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));" onclick="addPantryItem()">+</button>
+                </div>
             </div>
+
+            <!-- ELENCO ARTICOLI DISPENSA -->
+            <div id="pantryListContainer"></div>
         </div>
 
-        <div class="frequent-products-zone" id="frequentZone" style="display: none; margin: 0 6px 16px 6px;">
-            <div class="section-title" style="color: #9D4EDD;">⭐ Comprati Spesso:</div>
-            <div class="frequent-chips-container" id="frequentChips"></div>
-        </div>
-
-        <div id="shoppingListContainer"></div>
-
-        <div class="budget-dashboard" id="budgetDashboard">
-            <div class="budget-row">
-                <span>Totale stimato lista:</span>
-                <span style="color: white; font-weight: 500;" id="estimatedTotal">0.00 €</span>
-            </div>
-            <div class="budget-row total-highlight">
-                <span>Nel Carrello:</span>
-                <span class="success-text" id="cartTotal">0.00 €</span>
-            </div>
-        </div>
-
-        <div class="action-buttons-container">
-            <button id="clearCompletedBtn" class="clear-btn" onclick="clearCompleted()">Svuota Carrello 🧹</button>
-            <button id="resetAllBtn" class="clear-btn" onclick="resetAllList()">Azzera Lista 🗑️</button>
-        </div>
+        <!-- BARRA DI NAVIGAZIONE INFERIORE -->
+        <nav class="bottom-nav">
+            <button id="navShopping" class="nav-item active" onclick="switchTab('shopping')">
+                <span class="nav-icon">🛒</span>
+                <span>Lista Spesa</span>
+            </button>
+            <button id="navPantry" class="nav-item" onclick="switchTab('pantry')">
+                <span class="nav-icon">📦</span>
+                <span>Dispensa Casa</span>
+            </button>
+        </nav>
     </div>
 
+    <!-- SCRIPT FIREBASE COMPAT -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -338,6 +412,7 @@
         let databaseListener = null;
         let chartCategoryInstance = null;
         let chartMonthlyInstance = null;
+        let currentPantryFilter = 'all'; // 'all' o 'missing'
 
         // GESTIONE DELLO STATO DELL'AUTENTICAZIONE
         auth.onAuthStateChanged((user) => {
@@ -371,7 +446,7 @@
                 .catch((error) => {
                     errorDiv.style.display = 'block';
                     if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                        errorDiv.innerText = "❌ Email o password errata. Controlla le maiuscole o spazi extra finali.";
+                        errorDiv.innerText = "❌ Email o password errata.";
                     } else {
                         errorDiv.innerText = "⚠️ Errore Cloud: " + error.message;
                     }
@@ -382,7 +457,6 @@
             if(confirm("Vuoi uscire dall'applicazione?")) { auth.signOut(); }
         }
 
-        // DATI DI DEFAULT
         const defaultCategories = [
             "Ortofrutta 🍎", "Pane e Forno 🥖", "Dispensa 🍝", 
             "Carne e Pesce 🥩", "Latticini e Frigo 🧀", "Bevande 💧", 
@@ -391,10 +465,8 @@
 
         const smartDictionary = [
             { name: "Mele", cat: "Ortofrutta 🍎", price: 1.99 }, { name: "Banane", cat: "Ortofrutta 🍎", price: 1.49 }, { name: "Insalata", cat: "Ortofrutta 🍎", price: 1.19 }, { name: "Pomodori", cat: "Ortofrutta 🍎", price: 2.49 },
-            { name: "Pane", cat: "Pane e Forno 🥖", price: 1.20 }, { name: "Biscotti", cat: "Pane e Forno 🥖", price: 2.80 }, { name: "Crackers", cat: "Pane e Forno 🥖", price: 1.40 }, { name: "Cornetti", cat: "Pane e Forno 🥖", price: 2.50 },
-            { name: "Pasta", cat: "Dispensa 🍝", price: 0.85 }, { name: "Riso", cat: "Dispensa 🍝", price: 1.99 }, { name: "Passata di pomodoro", cat: "Dispensa 🍝", price: 0.99 }, { name: "Olio d'oliva", cat: "Dispensa 🍝", price: 7.49 },
-            { name: "Petto di Pollo", cat: "Carne e Pesce 🥩", price: 6.50 }, { name: "Macinato", cat: "Carne e Pesce 🥩", price: 5.90 }, { name: "Latte", cat: "Latticini e Frigo 🧀", price: 1.39 }, { name: "Mozzarella", cat: "Latticini e Frigo 🧀", price: 1.10 },
-            { name: "Acqua Naturale", cat: "Bevande 💧", price: 0.35 }, { name: "Birra", cat: "Bevande 💧", price: 1.50 }, { name: "Carta Igienica", cat: "Igiene e Casa 🧻", price: 3.50 }, { name: "Pizza surgelata", cat: "Surgelati 🧊", price: 2.99 }
+            { name: "Pane", cat: "Pane e Forno 🥖", price: 1.20 }, { name: "Biscotti", cat: "Pane e Forno 🥖", price: 2.80 }, { name: "Pasta", cat: "Dispensa 🍝", price: 0.85 }, { name: "Riso", cat: "Dispensa 🍝", price: 1.99 },
+            { name: "Petto di Pollo", cat: "Carne e Pesce 🥩", price: 6.50 }, { name: "Latte", cat: "Latticini e Frigo 🧀", price: 1.39 }, { name: "Acqua Naturale", cat: "Bevande 💧", price: 0.35 }, { name: "Carta Igienica", cat: "Igiene e Casa 🧻", price: 3.50 }
         ];
 
         let localState = {
@@ -402,7 +474,8 @@
             markets: {
                 "Supermercato Standard": { categories: [...defaultCategories], items: [], history: {} }
             },
-            storico_spese: []
+            storico_spese: [],
+            dispensa: [] // Nuovo database interno della dispensa
         };
 
         function startRealtimeSync() {
@@ -410,12 +483,14 @@
                 if (doc.exists) {
                     localState = doc.data();
                     if (!localState.storico_spese) localState.storico_spese = [];
+                    if (!localState.dispensa) localState.dispensa = [];
                 } else {
                     docRef.set(localState);
                 }
                 updateMarketSelectorUI();
                 updateCategoryUI();
                 renderList();
+                renderPantry();
                 renderFrequentChips();
                 if(document.getElementById('statsPanel').classList.contains('open')) { buildCharts(); }
             }, (error) => {
@@ -423,15 +498,39 @@
             });
         }
 
+        // CAMBIO DI TAB SPESA / DISPENSA
+        function switchTab(tab) {
+            triggerHapticFeedback();
+            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            if (tab === 'shopping') {
+                document.getElementById('viewShopping').classList.add('active');
+                document.getElementById('navShopping').classList.add('active');
+            } else if (tab === 'pantry') {
+                document.getElementById('viewPantry').classList.add('active');
+                document.getElementById('navPantry').classList.add('active');
+                renderPantry();
+            }
+        }
+
+        function setPantryFilter(filter) {
+            triggerHapticFeedback();
+            currentPantryFilter = filter;
+            document.getElementById('filterPantryAll').classList.remove('active');
+            document.getElementById('filterPantryMissing').classList.remove('active');
+            if(filter === 'all') document.getElementById('filterPantryAll').classList.add('active');
+            if(filter === 'missing') document.getElementById('filterPantryMissing').classList.add('active');
+            renderPantry();
+        }
+
         // FUNZIONE PER CONTROLLARE APERTURA/CHIUSURA STATISTICHE
         function toggleStatsPanel() {
             const panel = document.getElementById('statsPanel');
             const btnText = document.getElementById('statsBtnText');
             panel.classList.toggle('open');
-            
             if (panel.classList.contains('open')) {
-                btnText.innerText = "Nascondi Statistiche Spese";
-                buildCharts();
+                btnText.innerText = "Nascondi Statistiche Spese"; buildCharts();
             } else {
                 btnText.innerText = "Mostra Statistiche Spese";
             }
@@ -443,20 +542,16 @@
             const oggi = new Date();
             const meseCorrenteStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}`;
 
-            // Calcolo totale mese corrente
             let totaleMese = 0;
             const spesePerCategoria = {};
             const spesePerMese = {};
 
             storico.forEach(spesa => {
                 const spesaPrezzoCompleto = (spesa.prezzo || 0) * (spesa.quantita || 1);
-                
-                // Aggrega per mese corrente (per torta categorie)
                 if (spesa.mese === meseCorrenteStr) {
                     totaleMese += spesaPrezzoCompleto;
                     spesePerCategoria[spesa.categoria] = (spesePerCategoria[spesa.categoria] || 0) + spesaPrezzoCompleto;
                 }
-                // Aggrega per andamento mensile storico
                 if (spesa.mese) {
                     spesePerMese[spesa.mese] = (spesePerMese[spesa.mese] || 0) + spesaPrezzoCompleto;
                 }
@@ -464,35 +559,26 @@
 
             document.getElementById('currentMonthTotal').innerText = `${totaleMese.toFixed(2)} €`;
 
-            // 1. GRAFICO A TORTA (CATEGORIE)
-            const catLabels = Object.keys(spesePerCategoria);
-            const catData = Object.values(spesePerCategoria);
-
             if (chartCategoryInstance) chartCategoryInstance.destroy();
             const ctxCat = document.getElementById('categoryChart').getContext('2d');
             chartCategoryInstance = new Chart(ctxCat, {
                 type: 'doughnut',
                 data: {
-                    labels: catLabels,
+                    labels: Object.keys(spesePerCategoria),
                     datasets: [{
-                        data: catData,
-                        backgroundColor: ['#00E5FF', '#9D4EDD', '#39FF14', '#FF3131', '#FF9F43', '#4EDD99', '#FFD200', '#FF6B6B', '#9F7AEA'],
+                        data: Object.values(spesePerCategoria),
+                        backgroundColor: ['#00E5FF', '#9D4EDD', '#39FF14', '#FF3131', '#FF9F43', '#4EDD99', '#FFD200', '#FF6B6B'],
                         borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right', labels: { color: '#8E9AA8', font: { size: 11 } } }
-                    }
+                    plugins: { legend: { position: 'right', labels: { color: '#8E9AA8', font: { size: 11 } } } }
                 }
             });
 
-            // 2. GRAFICO A BARRE (STORICO MESI)
-            const mesiOrdinati = Object.keys(spesePerMese).sort().slice(-4); // Ultimi 4 mesi
-            const mesiData = mesiOrdinati.map(m => spesePerMese[m]);
-
+            const mesiOrdinati = Object.keys(spesePerMese).sort().slice(-4);
             if (chartMonthlyInstance) chartMonthlyInstance.destroy();
             const ctxMesi = document.getElementById('monthlyChart').getContext('2d');
             chartMonthlyInstance = new Chart(ctxMesi, {
@@ -500,8 +586,7 @@
                 data: {
                     labels: mesiOrdinati,
                     datasets: [{
-                        label: 'Spesa (€)',
-                        data: mesiData,
+                        data: mesiOrdinati.map(m => spesePerMese[m]),
                         backgroundColor: 'rgba(157, 78, 221, 0.4)',
                         borderColor: '#9D4EDD',
                         borderWidth: 2,
@@ -520,31 +605,25 @@
             });
         }
 
-        // WAKE LOCK E STRUTTURE BASE
-        let wakeLock = null;
-        async function requestWakeLock() {
-            try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {}
-        }
-        document.addEventListener('touchstart', requestWakeLock, { once: true });
-        document.addEventListener('click', requestWakeLock, { once: true });
-
-        function startVoiceRecognition() {
+        // DETTATURA VOCALE MULTI-INPUT
+        function startVoiceRecognition(inputId) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) { alert("Dettatura non supportata."); return; }
             const recognition = new SpeechRecognition();
             recognition.lang = 'it-IT';
-            const voiceBtn = document.getElementById('voiceBtn');
-            voiceBtn.classList.add('listening');
+            const btn = inputId === 'itemInput' ? document.getElementById('voiceBtn') : document.getElementById('pantryVoiceBtn');
+            
+            btn.classList.add('listening');
             triggerHapticFeedback();
             recognition.start();
 
             recognition.onresult = (event) => {
                 const text = event.results[0][0].transcript;
-                document.getElementById('itemInput').value = text.charAt(0).toUpperCase() + text.slice(1);
-                searchAutocomplete(); 
+                document.getElementById(inputId).value = text.charAt(0).toUpperCase() + text.slice(1);
+                if(inputId === 'itemInput') searchAutocomplete();
             };
-            recognition.onend = () => voiceBtn.classList.remove('listening');
-            recognition.onerror = () => voiceBtn.classList.remove('listening');
+            recognition.onend = () => btn.classList.remove('listening');
+            recognition.onerror = () => btn.classList.remove('listening');
         }
 
         function triggerHapticFeedback() { if (navigator.vibrate) navigator.vibrate(15); }
@@ -557,14 +636,13 @@
                 const mHistory = localState.markets[mName].history || {};
                 if (mHistory[productName] && mHistory[productName].price > 0) latestPriceFound = mHistory[productName].price;
             });
-            if (latestPriceFound > 0) return latestPriceFound;
-            const defaultMatch = smartDictionary.find(d => d.name.toLowerCase() === productName.toLowerCase());
-            return defaultMatch ? defaultMatch.price : 0;
+            return latestPriceFound || (smartDictionary.find(d => d.name.toLowerCase() === productName.toLowerCase())?.price || 0);
         }
 
+        // SUGGERIMENTI AUTOCOMPLETE
         const itemInput = document.getElementById('itemInput');
         if(itemInput) {
-            ['input', 'keydown', 'keyup', 'change'].forEach(evt => {
+            ['input', 'focus'].forEach(evt => {
                 itemInput.addEventListener(evt, () => searchAutocomplete());
             });
         }
@@ -573,12 +651,10 @@
             const input = document.getElementById('itemInput');
             const listContainer = document.getElementById('autocompleteList');
             const filter = input.value.trim().toLowerCase();
-            const activeCategories = getActiveMarket().categories;
+            if (!filter) { listContainer.style.display = 'none'; return; }
 
-            if (!filter || filter.length < 1) { listContainer.style.display = 'none'; return; }
-
-            const combinedDictionary = [...smartDictionary];
-            if (matches = combinedDictionary.filter(item => item.name.toLowerCase().includes(filter) && activeCategories.includes(item.cat)).slice(0, 5)) {
+            const matches = smartDictionary.filter(item => item.name.toLowerCase().includes(filter)).slice(0, 5);
+            if (matches.length > 0) {
                 listContainer.innerHTML = ''; listContainer.style.display = 'block';
                 matches.forEach(match => {
                     const estPrice = findEstimatedPriceGlobal(match.name);
@@ -615,12 +691,10 @@
                 zone.style.display = 'block'; container.innerHTML = '';
                 sortedHistory.forEach(item => {
                     const btn = document.createElement('button');
-                    btn.className = 'frequent-chip';
-                    const currentEst = findEstimatedPriceGlobal(item.name);
-                    btn.innerText = `+ ${item.name}`;
+                    btn.className = 'frequent-chip'; btn.innerText = `+ ${item.name}`;
                     btn.onclick = () => {
                         triggerHapticFeedback();
-                        getActiveMarket().items.push({ id: Date.now(), name: item.name, category: item.category, qty: 1, price: currentEst || 0, completed: false });
+                        getActiveMarket().items.push({ id: Date.now(), name: item.name, category: item.category, qty: 1, price: findEstimatedPriceGlobal(item.name), completed: false });
                         pushToCloud();
                     };
                     container.appendChild(btn);
@@ -629,11 +703,9 @@
         }
 
         function updateMarketSelectorUI() {
-            const select = document.getElementById('marketSelect');
-            select.innerHTML = '';
+            const select = document.getElementById('marketSelect'); select.innerHTML = '';
             Object.keys(localState.markets).forEach(mName => {
-                const opt = document.createElement('option');
-                opt.value = mName; opt.innerText = mName;
+                const opt = document.createElement('option'); opt.value = mName; opt.innerText = mName;
                 if(mName === localState.currentMarket) opt.selected = true;
                 select.appendChild(opt);
             });
@@ -641,9 +713,8 @@
 
         function changeMarket() { localState.currentMarket = document.getElementById('marketSelect').value; pushToCloud(); }
         function addMarket() {
-            const input = document.getElementById('newMarketInput');
-            const name = input.value.trim();
-            if (name !== '' && !localState.markets[name]) {
+            const input = document.getElementById('newMarketInput'); const name = input.value.trim();
+            if (name && !localState.markets[name]) {
                 localState.markets[name] = { categories: [...defaultCategories], items: [], history: {} };
                 localState.currentMarket = name; input.value = ''; pushToCloud();
             }
@@ -657,23 +728,28 @@
         }
 
         function toggleCatManager() {
-            const content = document.getElementById('catContent');
-            const sign = document.getElementById('panelsign');
-            content.classList.toggle('open');
-            sign.innerText = content.classList.contains('open') ? "▼" : "▶";
+            const content = document.getElementById('catContent'); const sign = document.getElementById('panelsign');
+            content.classList.toggle('open'); sign.innerText = content.classList.contains('open') ? "▼" : "▶";
         }
 
         function updateCategoryUI() {
             const select = document.getElementById('categoryInput');
+            const pantrySelect = document.getElementById('pantryCategoryInput');
             const catListElement = document.getElementById('customCatList');
             const currentCatList = getActiveMarket().categories;
             const currentItems = getActiveMarket().items || [];
             
-            const saved = select.value; select.innerHTML = '';
+            // Popola menu categorie spesa
+            select.innerHTML = '';
             currentCatList.forEach(cat => {
                 const opt = document.createElement('option'); opt.value = cat; opt.innerText = cat; select.appendChild(opt);
             });
-            if(saved && currentCatList.includes(saved)) select.value = saved;
+
+            // Popola menu categorie dispensa
+            pantrySelect.innerHTML = '';
+            currentCatList.forEach(cat => {
+                const opt = document.createElement('option'); opt.value = cat; opt.innerText = cat; pantrySelect.appendChild(opt);
+            });
 
             catListElement.innerHTML = '';
             currentCatList.forEach((cat, index) => {
@@ -692,8 +768,7 @@
         }
 
         function moveCategory(index, dir) {
-            const list = getActiveMarket().categories;
-            [list[index], list[index + dir]] = [list[index + dir], list[index]]; pushToCloud();
+            const list = getActiveMarket().categories; [list[index], list[index + dir]] = [list[index + dir], list[index]]; pushToCloud();
         }
         function addCategory() {
             const text = document.getElementById('newCatInput').value.trim();
@@ -703,9 +778,10 @@
         }
         function deleteCategory(index) { getActiveMarket().categories.splice(index, 1); pushToCloud(); }
 
+        // RENDERING DELLA SCHERMATA SPESA
         function renderList() {
-            const container = document.getElementById('shoppingListContainer');
-            container.innerHTML = ''; const activeMarket = getActiveMarket();
+            const container = document.getElementById('shoppingListContainer'); container.innerHTML = '';
+            const activeMarket = getActiveMarket();
             let estTotal = 0, cartTotal = 0;
             let totalItems = activeMarket.items.length;
             let compItems = activeMarket.items.filter(i => i.completed).length;
@@ -721,8 +797,7 @@
             activeMarket.categories.forEach(reparto => {
                 const prodotti = activeMarket.items.filter(item => item.category === reparto);
                 if (prodotti.length > 0) {
-                    const header = document.createElement('div');
-                    header.className = 'category-header'; header.innerText = reparto; container.appendChild(header);
+                    const header = document.createElement('div'); header.className = 'category-header'; header.innerText = reparto; container.appendChild(header);
                     const ul = document.createElement('ul'); ul.className = 'product-list';
                     
                     prodotti.forEach(item => {
@@ -756,10 +831,8 @@
         }
 
         function addItem() {
-            const input = document.getElementById('itemInput');
-            const catSel = document.getElementById('categoryInput');
-            const qtyIn = document.getElementById('qtyInput');
-            const prIn = document.getElementById('priceInput');
+            const input = document.getElementById('itemInput'); const catSel = document.getElementById('categoryInput');
+            const qtyIn = document.getElementById('qtyInput'); const prIn = document.getElementById('priceInput');
             const text = input.value.trim(); const qty = parseInt(qtyIn.value) || 1; const price = parseFloat(prIn.value) || 0;
             
             if (text && catSel.value) {
@@ -784,7 +857,101 @@
             if (idx !== -1) { items.splice(idx, 1); pushToCloud(); }
         }
 
-        // FUNZIONE SVUOTA CARRELLO INTEGRATA CON SALVATAGGIO STORICO LOCALE
+        // RENDERING LOGICO DELLA SCHERMATA DISPENSA
+        function renderPantry() {
+            const container = document.getElementById('pantryListContainer'); if(!container) return;
+            container.innerHTML = '';
+            const pantryItems = localState.dispensa || [];
+            const activeMarket = getActiveMarket();
+
+            activeMarket.categories.forEach(reparto => {
+                let prodottiCat = pantryItems.filter(item => item.categoria === reparto);
+                
+                // Filtro "Cose Finite"
+                if (currentPantryFilter === 'missing') {
+                    prodottiCat = prodottiCat.filter(item => item.stato === 'esaurito');
+                }
+
+                if (prodottiCat.length > 0) {
+                    const header = document.createElement('div'); header.className = 'category-header'; header.innerText = reparto; container.appendChild(header);
+                    const ul = document.createElement('ul'); ul.className = 'product-list';
+                    
+                    prodottiCat.forEach(item => {
+                        const li = document.createElement('li'); li.className = 'product-item';
+                        const isStocked = item.stato === 'disponibile';
+
+                        li.innerHTML = `
+                            <span class="item-text" style="margin-left:6px; font-weight:500;">${item.nome}</span>
+                            <button class="pantry-status-btn ${isStocked ? 'stocked' : 'empty'}" onclick="togglePantryStatus('${item.nome}')">
+                                ${isStocked ? '🟢 Disponibile' : '🔴 Finito! Compra'}
+                            </button>
+                            <button class="delete-btn" style="margin-left: 14px;" onclick="deletePantryItem('${item.nome}')">🗑️</button>
+                        `;
+                        ul.appendChild(li);
+                    });
+                    container.appendChild(ul);
+                }
+            });
+        }
+
+        function addPantryItem() {
+            const input = document.getElementById('pantryItemInput');
+            const catSel = document.getElementById('pantryCategoryInput');
+            const nome = input.value.trim();
+
+            if (nome && catSel.value) {
+                triggerHapticFeedback();
+                if (!localState.dispensa) localState.dispensa = [];
+                
+                // Controlla doppioni
+                if (localState.dispensa.some(i => i.nome.toLowerCase() === nome.toLowerCase())) {
+                    alert("Questo prodotto esiste già in dispensa!"); return;
+                }
+
+                localState.dispensa.push({
+                    nome: nome,
+                    categoria: catSel.value,
+                    stato: 'disponibile' // di default a casa c'è
+                });
+
+                input.value = ''; pushToCloud();
+            }
+        }
+
+        // LOGICA DI AGGANCIO DISPENSA ➔ LISTA SPESA
+        function togglePantryStatus(nome) {
+            triggerHapticFeedback();
+            const idx = localState.dispensa.findIndex(i => i.nome === nome);
+            if (idx !== -1) {
+                const item = localState.dispensa[idx];
+                if (item.stato === 'disponibile') {
+                    item.stato = 'esaurito';
+                    // CICLO AUTOMATICO: Lo inserisce al volo nella lista della spesa
+                    const am = getActiveMarket();
+                    if (!am.items.some(i => i.name.toLowerCase() === nome.toLowerCase() && !i.completed)) {
+                        am.items.push({
+                            id: Date.now(),
+                            name: item.nome,
+                            category: item.categoria,
+                            qty: 1,
+                            price: findEstimatedPriceGlobal(item.nome),
+                            completed: false
+                        });
+                    }
+                } else {
+                    item.stato = 'disponibile';
+                }
+                pushToCloud();
+            }
+        }
+
+        function deletePantryItem(nome) {
+            if(confirm(`Eliminare ${nome} dalla dispensa?`)) {
+                localState.dispensa = localState.dispensa.filter(i => i.nome !== nome); pushToCloud();
+            }
+        }
+
+        // FUNZIONE SVUOTA CARRELLO CON AGGIORNAMENTO INVERSO (SPESA ➔ DISPENSA)
         function clearCompleted() {
             triggerHapticFeedback();
             const activeMarket = getActiveMarket();
@@ -797,8 +964,10 @@
             const dataCompleta = oggi.toISOString().split('T')[0];
 
             if (!localState.storico_spese) { localState.storico_spese = []; }
+            if (!localState.dispensa) { localState.dispensa = []; }
 
             itemsComprati.forEach(item => {
+                // 1. Salva nello storico spese per i grafici
                 localState.storico_spese.push({
                     nome: item.name,
                     prezzo: parseFloat(item.price) || 0,
@@ -808,6 +977,12 @@
                     mese: meseCorrente,
                     data: dataCompleta
                 });
+
+                // 2. CICLO AUTOMATICO INVERSO: se l'oggetto esiste in dispensa ed era "esaurito", ora torna "disponibile"
+                const dispensaIdx = localState.dispensa.findIndex(p => p.nome.toLowerCase() === item.name.toLowerCase());
+                if (dispensaIdx !== -1) {
+                    localState.dispensa[dispensaIdx].stato = 'disponibile';
+                }
             });
 
             activeMarket.items = activeMarket.items.filter(item => !item.completed);
